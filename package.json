@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~56.0.15",
+    "axios": "^1.17.0",
     "expo": "~56.0.8",
     "expo-constants": "~56.0.16",
+    "expo-dev-client": "~56.0.18",
     "expo-device": "~56.0.4",
+    "expo-file-system": "~56.0.7",
     "expo-font": "~56.0.5",
     "expo-glass-effect": "~56.0.4",
     "expo-image": "~56.0.9",
@@ -17,6 +20,7 @@
     "expo-symbols": "~56.0.5",
     "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
+    "expo-widgets": "~56.0.17",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -29,11 +33,15 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "cheerio": "^1.2.0",
+    "cloudinary": "^2.10.0",
+    "p-limit": "^7.3.0",
+    "tsx": "^4.22.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
+    "test": "tsx --env-file=.env ./scripts/scrape.ts",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

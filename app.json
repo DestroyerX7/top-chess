@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "top-chess",
+    "name": "TopChess",
     "slug": "top-chess",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,15 @@
     "scheme": "topchess",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": {
+        "light": "./assets/images/ios-icon-default.png",
+        "dark": "./assets/images/ios-icon-dark.png",
+        "tinted": "./assets/images/ios-icon-tinted.png"
+      },
+      "bundleIdentifier": "com.destroyerx7.topchess",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,17 +36,45 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#c4ff10",
+          "image": "./assets/images/icon.png",
           "android": {
-            "image": "./assets/images/splash-icon.png",
+            "image": "./assets/images/icon.png",
             "imageWidth": 76
-          }
+          },
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.destroyerx7.topchess.widgets",
+          "groupIdentifier": "group.com.destroyerx7.topchess",
+          "enablePushNotifications": false,
+          "widgets": [
+            {
+              "name": "MyWidget",
+              "displayName": "My Widget",
+              "description": "A sample home screen widget",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "systemLarge"
+              ]
+            }
+          ]
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e79222ac-f8e1-4b30-83da-91f32a723333"
+      }
     }
   }
 }
