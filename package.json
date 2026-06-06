@@ -41,7 +41,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "test": "tsx --env-file=.env ./scripts/scrape.ts",
+    "scrape": "tsx --env-file=.env.local ./scripts/scrape.ts",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

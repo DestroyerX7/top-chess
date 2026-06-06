@@ -22,7 +22,7 @@ async function scrape() {
     "https://api.chesstools.org/fide/top_active/?limit=100&history=false",
   );
 
-  const limit = pLimit(5);
+  const limit = pLimit(10);
 
   const promises = chessPlayers.map((chessPlayer) =>
     limit(async () => {
