@@ -3,11 +3,11 @@ import * as cheerio from "cheerio";
 import { v2 as cloudinary } from "cloudinary";
 import pLimit from "p-limit";
 
-type ChessPlayer = {
+type ChessToolsChessPlayer = {
   rank: string;
   name: string;
   fide_id: string;
-  counrty: string;
+  country: string;
   rating: string;
 };
 
@@ -18,22 +18,23 @@ cloudinary.config({
 });
 
 async function scrape() {
-  const { data: chessPlayers } = await axios.get<ChessPlayer[]>(
-    "https://api.chesstools.org/fide/top_active/?limit=100&history=false",
-  );
+  const { data: chessToolsChessPlayers } = await axios.get<
+    ChessToolsChessPlayer[]
+  >("https://api.chesstools.org/fide/top_active/?limit=100&history=false");
 
   const limit = pLimit(10);
 
-  const promises = chessPlayers.map((chessPlayer) =>
+  const promises = chessToolsChessPlayers.map((chessToolsChessPlayer) =>
     limit(async () => {
-      const fideUrl = `https://ratings.fide.com/profile/${chessPlayer.fide_id}`;
-      const { data: html } = await axios.get(fideUrl);
+      const { data: html } = await axios.get(
+        `https://ratings.fide.com/profile/${chessToolsChessPlayer.fide_id}`,
+      );
 
       const $ = cheerio.load(html);
       const src = $("img.profile-top__photo").attr("src");
 
       if (src === undefined) {
-        console.log(chessPlayer.name + " src not found.");
+        console.log(chessToolsChessPlayer.name + " src not found.");
         return;
       }
 
@@ -44,7 +45,7 @@ async function scrape() {
         const stream = cloudinary.uploader.upload_stream(
           {
             folder: "top-chess-uploads",
-            public_id: chessPlayer.fide_id,
+            public_id: chessToolsChessPlayer.fide_id,
             overwrite: true,
           },
           (err, result) => {

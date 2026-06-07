@@ -1,3 +1,4 @@
+import { ChessPlayer } from "@/api/chessPlayers";
 import { HStack, Image, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
   cornerRadius,
@@ -8,14 +9,13 @@ import {
   shadow,
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
-import { ChessPlayer } from ".";
 
-type MyWidgetProps = {
+type Props = {
   chessPlayers: ChessPlayer[];
 };
 
-const MyWidget = (
-  { chessPlayers }: MyWidgetProps,
+const TopChessPlayers = (
+  { chessPlayers }: Props,
   environment: WidgetEnvironment,
 ) => {
   "widget";
@@ -84,4 +84,4 @@ const MyWidget = (
   );
 };
 
-export default createWidget("MyWidget", MyWidget);
+export default createWidget("TopChessPlayers", TopChessPlayers);

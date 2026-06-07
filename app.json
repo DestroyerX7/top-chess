@@ -53,9 +53,9 @@
           "enablePushNotifications": false,
           "widgets": [
             {
-              "name": "MyWidget",
-              "displayName": "My Widget",
-              "description": "A sample home screen widget",
+              "name": "TopChessPlayers",
+              "displayName": "Top Chess Players",
+              "description": "Displays the highest rated chess players",
               "supportedFamilies": [
                 "systemSmall",
                 "systemMedium",
