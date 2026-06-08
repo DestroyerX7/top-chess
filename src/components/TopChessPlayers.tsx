@@ -1,4 +1,3 @@
-import { ChessPlayer } from "@/api/chessPlayers";
 import { HStack, Image, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
   cornerRadius,
@@ -10,12 +9,20 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
+type WidgetChessPlayer = {
+  fideId: number;
+  name: string;
+  rating: number;
+  livePos: number;
+  imageUrl: string;
+};
+
 type Props = {
-  chessPlayers: ChessPlayer[];
+  widgetChessPlayers: WidgetChessPlayer[];
 };
 
 const TopChessPlayers = (
-  { chessPlayers }: Props,
+  { widgetChessPlayers }: Props,
   environment: WidgetEnvironment,
 ) => {
   "widget";
@@ -28,7 +35,7 @@ const TopChessPlayers = (
         <HStack spacing={8} key={rowIndex}>
           {Array.from({ length: cols }).map((_, colIndex) => {
             const chessPlayerIndex = rowIndex * cols + colIndex;
-            const chessPlayer = chessPlayers[chessPlayerIndex];
+            const chessPlayer = widgetChessPlayers[chessPlayerIndex];
             const firstName = chessPlayer.name.includes(",")
               ? chessPlayer.name.split(", ")[1]
               : chessPlayer.name.split(" ")[0];
@@ -50,7 +57,7 @@ const TopChessPlayers = (
                       shadow({ color: "#000000", radius: 2 }),
                     ]}
                   >
-                    #{chessPlayer.rank}
+                    #{chessPlayer.livePos}
                   </Text>
 
                   <Spacer />

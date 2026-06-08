@@ -1,12 +1,15 @@
 import { getTopChessPlayers } from "@/api/chessPlayers";
 import TopChessPlayers from "@/components/TopChessPlayers";
+import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
   FlatList,
+  Image,
   ImageBackground,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,7 +23,17 @@ export default function Index() {
 
   useEffect(() => {
     if (chessPlayers !== undefined) {
-      TopChessPlayers.updateSnapshot({ chessPlayers });
+      const widgetChessPlayers = chessPlayers.map((chessPlayer) => ({
+        fideId: chessPlayer.fideId,
+        name: chessPlayer.name,
+        rating: chessPlayer.rating,
+        livePos: chessPlayer.livePos,
+        imageUrl: chessPlayer.imageUrl,
+      }));
+
+      TopChessPlayers.updateSnapshot({
+        widgetChessPlayers,
+      });
     }
   }, [chessPlayers]);
 
@@ -30,13 +43,61 @@ export default function Index() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 16,
+          padding: 16,
+          alignItems: "center",
+        }}
+      >
+        <Image
+          style={{ width: 48, height: 48, borderRadius: 8 }}
+          source={require("@/assets/images/splash-screen-dark.png")}
+          alt="Top Chess Icon"
+        />
+
+        <View style={{ position: "relative", flex: 1 }}>
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: "white",
+              borderRadius: 100,
+              padding: 16,
+              paddingRight: 48,
+              color: "white",
+            }}
+            placeholder="Search"
+            placeholderTextColor="white"
+          />
+
+          <Ionicons
+            name="search"
+            size={20}
+            color="white"
+            style={{
+              position: "absolute",
+              right: 16,
+              top: "50%",
+              transform: [{ translateY: -10 }],
+            }}
+          />
+        </View>
+      </View>
+
       <FlatList
         data={chessPlayers}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 8 }}
         renderItem={({ item: chessPlayer }) => (
-          <View style={{ padding: 8, width: "50%", aspectRatio: 1 }}>
+          <View
+            style={{
+              padding: 8,
+              width: "50%",
+              aspectRatio: 1,
+            }}
+          >
             <ImageBackground
               source={{
                 uri: chessPlayer.imageUrl,
@@ -44,10 +105,9 @@ export default function Index() {
               style={{
                 width: "100%",
                 height: "100%",
-                borderRadius: 16,
-                overflow: "hidden",
               }}
-              key={chessPlayer.fide_id}
+              imageStyle={{ borderRadius: 16 }}
+              key={chessPlayer.fideId}
             >
               <View
                 style={{
@@ -55,21 +115,126 @@ export default function Index() {
                   padding: 8,
                   justifyContent: "space-between",
                   flex: 1,
+                  overflow: "visible",
                 }}
               >
-                <Text style={{ color: "white", fontWeight: "700" }}>
-                  #{chessPlayer.rank}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    overflow: "visible",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "column",
+                      gap: 4,
+                      overflow: "visible",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "700",
+                        textShadowColor: "black",
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: 2,
+                        overflow: "visible",
+                      }}
+                    >
+                      #{chessPlayer.livePos}
+                    </Text>
+
+                    <Text
+                      style={{
+                        color:
+                          chessPlayer.yearAgoRankingChange > 0
+                            ? "#c4ff10"
+                            : chessPlayer.yearAgoRankingChange < 0
+                              ? "red"
+                              : "gray",
+                        textShadowColor: "black",
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: 2,
+                        overflow: "visible",
+                      }}
+                    >
+                      {chessPlayer.yearAgoRankingChange > 0
+                        ? `\u25b2${chessPlayer.yearAgoRankingChange}`
+                        : chessPlayer.yearAgoRankingChange < 0
+                          ? `\u25bc${Math.abs(chessPlayer.yearAgoRankingChange)}`
+                          : "\u2013"}
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={{
+                      fontSize: 32,
+                      textShadowColor: "black",
+                      textShadowOffset: { width: 0, height: 2 },
+                      textShadowRadius: 2,
+                      overflow: "visible",
+                    }}
+                  >
+                    {chessPlayer.flag === "ff"
+                      ? "\u{1F1F7}\u{1F1FA}"
+                      : chessPlayer.flag
+                          .toUpperCase()
+                          .split("")
+                          .map((char) =>
+                            String.fromCodePoint(
+                              0x1f1e6 - 65 + char.charCodeAt(0),
+                            ),
+                          )
+                          .join("")}
+                  </Text>
+                </View>
 
                 <View
                   style={{
                     justifyContent: "space-between",
                   }}
                 >
-                  <Text style={{ color: "white", fontWeight: "700" }}>
-                    {chessPlayer.rating}
-                  </Text>
-                  <Text style={{ color: "white", fontWeight: "700" }}>
+                  <View style={{ flexDirection: "row", gap: 4 }}>
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "700",
+                        textShadowColor: "black",
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: 2,
+                        overflow: "visible",
+                      }}
+                    >
+                      {chessPlayer.rating}
+                    </Text>
+
+                    {chessPlayer.ratingDiff !== 0 && (
+                      <Text
+                        style={{
+                          color: chessPlayer.ratingDiff > 0 ? "#c4ff10" : "red",
+                          textShadowColor: "black",
+                          textShadowOffset: { width: 0, height: 2 },
+                          textShadowRadius: 2,
+                          overflow: "visible",
+                        }}
+                      >
+                        {chessPlayer.ratingDiff > 0 && "+"}
+                        {chessPlayer.ratingDiff}
+                      </Text>
+                    )}
+                  </View>
+
+                  <Text
+                    style={{
+                      color: "white",
+                      fontWeight: "700",
+                      textShadowColor: "black",
+                      textShadowOffset: { width: 0, height: 2 },
+                      textShadowRadius: 2,
+                      overflow: "visible",
+                    }}
+                  >
                     {chessPlayer.name}
                   </Text>
                 </View>
