@@ -1,0 +1,58 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "top-chess-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-07",
+  // "compatibility_flags": [
+  //   "nodejs_compat"
+  // ],
+  // "vars": {
+  //   "MY_VAR": "my-variable"
+  // },
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "MY_KV_NAMESPACE",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ],
+  // "r2_buckets": [
+  //   {
+  //     "binding": "MY_BUCKET",
+  //     "bucket_name": "my-bucket"
+  //   }
+  // ],
+  // "d1_databases": [
+  //   {
+  //     "binding": "MY_DB",
+  //     "database_name": "my-database",
+  //     "database_id": ""
+  //   }
+  // ],
+  // "ai": {
+  //   "binding": "AI"
+  // },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "queues": {
+    "producers": [
+      {
+        "queue": "chess-player-image-uploads",
+        "binding": "CHESS_PLAYER_IMAGE_UPLOAD_QUEUE",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "chess-player-image-uploads",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30,
+        "max_retries": 1,
+        "dead_letter_queue": "chess-player-image-uploads-dlq",
+      },
+    ],
+  },
+  "triggers": {
+    "crons": ["0 0 * * *"],
+  },
+}

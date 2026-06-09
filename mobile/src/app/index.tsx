@@ -1,8 +1,7 @@
-import { getTopChessPlayers } from "@/api/chessPlayers";
-import TopChessPlayers from "@/components/TopChessPlayers";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -13,18 +12,39 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getTopChessPlayers } from "../api/chessPlayers";
+import TopChessPlayers from "../components/TopChessPlayers";
+
+const flagOverrides: Record<string, string> = {
+  ff: "ru",
+  en: "gb",
+};
+
+function flagStringToEmoji(flagString: string) {
+  const code = flagOverrides[flagString.toLowerCase()] ?? flagString;
+  return code
+    .toUpperCase()
+    .split("")
+    .map((char) => String.fromCodePoint(0x1f1e6 - 65 + char.charCodeAt(0)))
+    .join("");
+}
 
 export default function Index() {
-  const { data: chessPlayers } = useQuery({
+  const {
+    data: chessPlayers,
+    isPending,
+    error,
+  } = useQuery({
     queryKey: ["chessPlayers"],
     queryFn: getTopChessPlayers,
     staleTime: 1000 * 60 * 10,
   });
 
+  const [searchInput, setSearchInput] = useState("");
+
   useEffect(() => {
     if (chessPlayers !== undefined) {
       const widgetChessPlayers = chessPlayers.map((chessPlayer) => ({
-        fideId: chessPlayer.fideId,
         name: chessPlayer.name,
         rating: chessPlayer.rating,
         livePos: chessPlayer.livePos,
@@ -39,6 +59,69 @@ export default function Index() {
 
   if (chessPlayers === undefined) {
     return;
+  }
+
+  const shownChessPlayers =
+    searchInput.length < 1
+      ? chessPlayers
+      : chessPlayers.filter((c) =>
+          c.name.toLowerCase().includes(searchInput.toLowerCase()),
+        );
+
+  if (shownChessPlayers.length === 0) {
+    return (
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 16,
+            padding: 16,
+            alignItems: "center",
+          }}
+        >
+          <Image
+            style={{ width: 48, height: 48, borderRadius: 8 }}
+            source={require("@/assets/images/splash-screen-dark.png")}
+            alt="Top Chess Icon"
+          />
+
+          <View style={{ position: "relative", flex: 1 }}>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: "white",
+                borderRadius: 100,
+                padding: 16,
+                paddingRight: 48,
+                color: "white",
+              }}
+              placeholder="Search"
+              placeholderTextColor="white"
+              onChangeText={(text) => setSearchInput(text)}
+              value={searchInput}
+            />
+
+            <Ionicons
+              name="search"
+              size={20}
+              color="white"
+              style={{
+                position: "absolute",
+                right: 16,
+                top: "50%",
+                transform: [{ translateY: -10 }],
+              }}
+            />
+          </View>
+        </View>
+
+        <View style={{ padding: 16 }}>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
+            No chess players found
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -69,6 +152,8 @@ export default function Index() {
             }}
             placeholder="Search"
             placeholderTextColor="white"
+            onChangeText={(text) => setSearchInput(text)}
+            value={searchInput}
           />
 
           <Ionicons
@@ -86,12 +171,16 @@ export default function Index() {
       </View>
 
       <FlatList
-        data={chessPlayers}
+        data={shownChessPlayers}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 8 }}
         renderItem={({ item: chessPlayer }) => (
-          <View
+          <Link
+            href={{
+              pathname: "/chess-player/[fideId]",
+              params: { fideId: chessPlayer.fideId },
+            }}
             style={{
               padding: 8,
               width: "50%",
@@ -145,26 +234,23 @@ export default function Index() {
                       #{chessPlayer.livePos}
                     </Text>
 
-                    <Text
-                      style={{
-                        color:
-                          chessPlayer.yearAgoRankingChange > 0
-                            ? "#c4ff10"
-                            : chessPlayer.yearAgoRankingChange < 0
-                              ? "red"
-                              : "gray",
-                        textShadowColor: "black",
-                        textShadowOffset: { width: 0, height: 2 },
-                        textShadowRadius: 2,
-                        overflow: "visible",
-                      }}
-                    >
-                      {chessPlayer.yearAgoRankingChange > 0
-                        ? `\u25b2${chessPlayer.yearAgoRankingChange}`
-                        : chessPlayer.yearAgoRankingChange < 0
-                          ? `\u25bc${Math.abs(chessPlayer.yearAgoRankingChange)}`
-                          : "\u2013"}
-                    </Text>
+                    {chessPlayer.yearAgoRankingChange !== 0 && (
+                      <Text
+                        style={{
+                          color:
+                            chessPlayer.yearAgoRankingChange > 0
+                              ? "#c4ff10"
+                              : "red",
+                          textShadowColor: "black",
+                          textShadowOffset: { width: 0, height: 2 },
+                          textShadowRadius: 2,
+                          overflow: "visible",
+                        }}
+                      >
+                        {chessPlayer.yearAgoRankingChange > 0 ? "▲" : "▼"}
+                        {Math.abs(chessPlayer.yearAgoRankingChange)}
+                      </Text>
+                    )}
                   </View>
 
                   <Text
@@ -176,17 +262,7 @@ export default function Index() {
                       overflow: "visible",
                     }}
                   >
-                    {chessPlayer.flag === "ff"
-                      ? "\u{1F1F7}\u{1F1FA}"
-                      : chessPlayer.flag
-                          .toUpperCase()
-                          .split("")
-                          .map((char) =>
-                            String.fromCodePoint(
-                              0x1f1e6 - 65 + char.charCodeAt(0),
-                            ),
-                          )
-                          .join("")}
+                    {flagStringToEmoji(chessPlayer.flag)}
                   </Text>
                 </View>
 
@@ -195,6 +271,21 @@ export default function Index() {
                     justifyContent: "space-between",
                   }}
                 >
+                  {chessPlayer.live && (
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "700",
+                        textShadowColor: "black",
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: 2,
+                        lineHeight: 24,
+                      }}
+                    >
+                      🔴Live
+                    </Text>
+                  )}
+
                   <View style={{ flexDirection: "row", gap: 4 }}>
                     <Text
                       style={{
@@ -240,7 +331,7 @@ export default function Index() {
                 </View>
               </View>
             </ImageBackground>
-          </View>
+          </Link>
         )}
       />
     </SafeAreaView>

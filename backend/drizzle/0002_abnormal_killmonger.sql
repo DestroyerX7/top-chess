@@ -1,0 +1,1 @@
+ALTER TABLE "chess_player" ALTER COLUMN "birthday" DROP NOT NULL;

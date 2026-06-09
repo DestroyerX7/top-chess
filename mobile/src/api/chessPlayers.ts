@@ -25,7 +25,7 @@ export type ChessPlayer = {
 
 export async function getTopChessPlayers() {
   const response = await axios.get<ChessPlayer[]>(
-    "https://top-chess-players.destroyerinc.workers.dev/get-top-chess-players",
+    "https://top-chess-backend.destroyerinc.workers.dev/get-top-chess-players",
   );
 
   return response.data;

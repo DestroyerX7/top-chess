@@ -10,7 +10,6 @@ import {
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
 type WidgetChessPlayer = {
-  fideId: number;
   name: string;
   rating: number;
   livePos: number;

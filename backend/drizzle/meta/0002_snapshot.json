@@ -1,0 +1,148 @@
+{
+  "id": "a4aed526-91d0-44f8-bcc1-277a84c210f1",
+  "prevId": "fe9169d7-8e85-48c1-b8bd-3c34b33e3da7",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.chess_player": {
+      "name": "chess_player",
+      "schema": "",
+      "columns": {
+        "fide_id": {
+          "name": "fide_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "flag": {
+          "name": "flag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country_name": {
+          "name": "country_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating": {
+          "name": "rating",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "live_pos": {
+          "name": "live_pos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating_diff": {
+          "name": "rating_diff",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pos_change_value": {
+          "name": "pos_change_value",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "year_ago_rating_change": {
+          "name": "year_ago_rating_change",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "year_ago_ranking_change": {
+          "name": "year_ago_ranking_change",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "games_count": {
+          "name": "games_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "birthday": {
+          "name": "birthday",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "best_pos_title": {
+          "name": "best_pos_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "best_rating_title": {
+          "name": "best_rating_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "live": {
+          "name": "live",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_updated_gmt": {
+          "name": "last_updated_gmt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
