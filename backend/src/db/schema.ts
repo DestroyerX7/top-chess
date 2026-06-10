@@ -28,7 +28,10 @@ export const chessPlayers = pgTable("chess_player", {
   lastUpdatedGmt: timestamp("last_updated_gmt", {
     withTimezone: true,
   }).notNull(),
-  imageUrl: text("image_url").notNull(),
+  imageUrl: text("image_url"),
+  bio: text("bio"),
+  description: text("description"),
+  wikipediaUrl: text("wikipedia_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

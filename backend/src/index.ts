@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { chessPlayers as dbChessPlayers } from "./db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, notInArray, sql } from "drizzle-orm";
 
 type Bindings = {
   NEON_DATABASE_URL: string;
@@ -98,25 +98,34 @@ type ScrapedChessPlayer = {
   sort_helper_inv: string;
 };
 
-type ChessPlayer = {
-  fideId: number;
-  name: string;
-  flag: string;
-  countryName: string;
-  rating: number;
-  livePos: number;
-  ratingDiff: number;
-  posChangeValue: number;
-  yearAgoRatingChange: number;
-  yearAgoRankingChange: number;
-  gamesCount: number;
-  age: number;
-  birthday: string | null;
-  bestPosTitle: string;
-  bestRatingTitle: string;
-  live: boolean;
-  lastUpdatedGmt: Date;
-  imageUrl: string;
+type WikiSearchResponse = {
+  query: {
+    search: {
+      pageid: number;
+      title: string;
+      snippet: string;
+    }[];
+  };
+};
+
+type WikiPage = {
+  pageid: number;
+  title: string;
+  extract?: string;
+  description?: string;
+  thumbnail?: {
+    source: string;
+    width: number;
+    height: number;
+  };
+  missing?: string;
+  fullurl?: string;
+};
+
+type WikiContentResponse = {
+  query: {
+    pages: Record<string, WikiPage>;
+  };
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -144,67 +153,106 @@ app.get("/get-top-chess-players", async (c) => {
   }
 });
 
-app.get("/get-chess-player/:fideId", async (c) => {
+// app.get("/get-chess-player/:fideId", async (c) => {
+//   try {
+//     const fideId = Number(c.req.param("fideId"));
+
+//     const neonClient = neon(c.env.NEON_DATABASE_URL);
+//     const db = drizzle(neonClient);
+
+//     const [chessPlayer] = await db
+//       .select()
+//       .from(dbChessPlayers)
+//       .where(eq(dbChessPlayers.fideId, fideId));
+
+//     return c.json(chessPlayer);
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       console.error("Database fetch error:", error.message);
+//     } else {
+//       console.error("Database fetch error");
+//     }
+
+//     return c.json({ error: "Failed to get chess player" }, 500);
+//   }
+// });
+
+// app.get("/test/:name", async (c) => {
+//   const name = c.req.param("name");
+
+//   const chessPlayerInfo = await getChessPlayerInfo(name);
+
+//   return c.json(chessPlayerInfo);
+// });
+
+async function getChessPlayerInfo(name: string) {
   try {
-    const fideId = Number(c.req.param("fideId"));
+    const searchResponse = await axios.get<WikiSearchResponse>(
+      "https://en.wikipedia.org/w/api.php",
+      {
+        params: {
+          action: "query",
+          list: "search",
+          srsearch: name,
+          format: "json",
+        },
+        headers: { "User-Agent": "top-chess-backend/1.0 (bojera22@gmail.com)" },
+      },
+    );
 
-    const neonClient = neon(c.env.NEON_DATABASE_URL);
-    const db = drizzle(neonClient);
+    const search = searchResponse.data.query.search.find((s) =>
+      s.snippet.toLowerCase().includes("chess"),
+    );
 
-    const [chessPlayer] = await db
-      .select()
-      .from(dbChessPlayers)
-      .where(eq(dbChessPlayers.fideId, fideId));
+    if (search === undefined) {
+      return {
+        imageUrl: null,
+        bio: null,
+        description: null,
+        wikipediaUrl: null,
+      };
+    }
 
-    return c.json(chessPlayer);
+    const pageId = search.pageid;
+
+    const contentResponse = await axios.get<WikiContentResponse>(
+      "https://en.wikipedia.org/w/api.php",
+      {
+        params: {
+          action: "query",
+          pageids: pageId,
+          prop: "extracts|pageimages|description",
+          exintro: true,
+          explaintext: true,
+          pithumbsize: 500,
+          format: "json",
+        },
+        headers: { "User-Agent": "top-chess-backend/1.0 (bojera22@gmail.com)" },
+      },
+    );
+
+    const page = contentResponse.data.query.pages[pageId];
+    const wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(search.title)}`;
+
+    return {
+      imageUrl: page.thumbnail?.source ?? null,
+      bio: page.extract ?? null,
+      description: page.description ?? null,
+      wikipediaUrl,
+    };
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Database fetch error:", error.message);
+      console.error("Failed to get chess player info: ", error.message);
     } else {
-      console.error("Database fetch error");
+      console.error("Failed to get chess player info");
     }
 
-    return c.json({ error: "Failed to get chess player" }, 500);
-  }
-});
-
-app.get("/test/:name", async (c) => {
-  const name = c.req.param("name");
-
-  if (name === undefined) {
-    return;
-  }
-
-  const url = await getWikipediaUrl(name);
-  return c.json(url);
-});
-
-async function getWikipediaUrl(name: string): Promise<string | null> {
-  try {
-    const response = await axios.get("https://en.wikipedia.org/w/api.php", {
-      params: {
-        action: "query",
-        list: "search",
-        srsearch: `${name} chess player`,
-        format: "json",
-        srlimit: 1,
-      },
-      headers: {
-        "User-Agent": "top-chess-players/1.0 (bojera22@gmail.com)",
-      },
-    });
-
-    const results = response.data.query.search;
-
-    if (results.length === 0) {
-      return null;
-    }
-
-    const pageTitle = encodeURIComponent(results[0].title.replace(/ /g, "_"));
-    return `https://en.wikipedia.org/wiki/${pageTitle}`;
-  } catch (error) {
-    console.error(`Failed to get Wikipedia URL for ${name}:`, error);
-    return null;
+    return {
+      imageUrl: null,
+      bio: null,
+      description: null,
+      wikipediaUrl: null,
+    };
   }
 }
 
@@ -222,8 +270,8 @@ async function scrapeChessPlayers(env: Bindings) {
       },
     );
 
-    const chessPlayers: ChessPlayer[] = response.data.map(
-      (scrapedChessPlayer) => ({
+    const chessPlayers: (typeof dbChessPlayers.$inferInsert)[] =
+      response.data.map((scrapedChessPlayer) => ({
         fideId: scrapedChessPlayer.fideid,
         name: scrapedChessPlayer.name,
         flag: scrapedChessPlayer.flag,
@@ -238,15 +286,15 @@ async function scrapeChessPlayers(env: Bindings) {
         age: scrapedChessPlayer.age,
         birthday:
           scrapedChessPlayer.birthday.length > 0
-            ? new Date(scrapedChessPlayer.birthday).toISOString().split("T")[0]
+            ? new Date(scrapedChessPlayer.birthday + " UTC")
+                .toISOString()
+                .split("T")[0]
             : null,
         bestPosTitle: scrapedChessPlayer.best_pos_title,
         bestRatingTitle: scrapedChessPlayer.best_rating_title,
         live: scrapedChessPlayer.live,
         lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
-        imageUrl: `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/top-chess-uploads/chess-player.jpg`,
-      }),
-    );
+      }));
 
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
@@ -271,15 +319,23 @@ async function scrapeChessPlayers(env: Bindings) {
           bestRatingTitle: sql`excluded.best_rating_title`,
           live: sql`excluded.live`,
           lastUpdatedGmt: sql`excluded.last_updated_gmt`,
-          // Not updating the imageUrl if they already have one
         },
       });
+
+    const fideIds = chessPlayers.map((chessPlayer) => chessPlayer.fideId);
+    await db
+      .delete(dbChessPlayers)
+      .where(notInArray(dbChessPlayers.fideId, fideIds));
 
     console.log("Queueing consumers to save chess player images...");
 
     await env.CHESS_PLAYER_IMAGE_UPLOAD_QUEUE.sendBatch(
       response.data.map((scrapeChessPlayer) => ({
-        body: { fideId: scrapeChessPlayer.fideid },
+        body: {
+          fideId: scrapeChessPlayer.fideid,
+          name: scrapeChessPlayer.name,
+        },
+        contentType: "json",
       })),
     );
 
@@ -293,70 +349,70 @@ async function scrapeChessPlayers(env: Bindings) {
   }
 }
 
-async function getChessPlayerBase64Image(fideId: number) {
-  try {
-    const { data: html } = await axios.get(
-      `https://ratings.fide.com/profile/${fideId}`,
-    );
-    const response = new Response(html);
+// async function getChessPlayerBase64Image(fideId: number) {
+//   try {
+//     const { data: html } = await axios.get(
+//       `https://ratings.fide.com/profile/${fideId}`,
+//     );
+//     const response = new Response(html);
 
-    let base64Image: string | null = null;
+//     let base64Image: string | null = null;
 
-    await new HTMLRewriter()
-      .on("img.profile-top__photo", {
-        element(el) {
-          base64Image = el.getAttribute("src");
-        },
-      })
-      .transform(response)
-      .text();
+//     await new HTMLRewriter()
+//       .on("img.profile-top__photo", {
+//         element(el) {
+//           base64Image = el.getAttribute("src");
+//         },
+//       })
+//       .transform(response)
+//       .text();
 
-    return base64Image as string | null;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error("Failed to find FIDE chess player image:", error.message);
-    } else {
-      console.error("Failed to find FIDE chess player image");
-    }
+//     return base64Image as string | null;
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       console.error("Failed to find FIDE chess player image:", error.message);
+//     } else {
+//       console.error("Failed to find FIDE chess player image");
+//     }
 
-    return null;
-  }
-}
+//     return null;
+//   }
+// }
 
-async function saveBase64ImageToCloudinary(
-  base64Image: string,
-  fideId: number,
-  cloudinaryCloudName: string,
-  cloudinaryApiKey: string,
-  cloudinaryApiSecret: string,
-) {
-  try {
-    const response = await axios.post<{ secure_url: string }>(
-      `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
-      {
-        file: base64Image,
-        public_id: `top-chess-uploads/${fideId}`,
-        overwrite: true,
-      },
-      {
-        auth: {
-          username: cloudinaryApiKey,
-          password: cloudinaryApiSecret,
-        },
-      },
-    );
+// async function saveBase64ImageToCloudinary(
+//   base64Image: string,
+//   fideId: number,
+//   cloudinaryCloudName: string,
+//   cloudinaryApiKey: string,
+//   cloudinaryApiSecret: string,
+// ) {
+//   try {
+//     const response = await axios.post<{ secure_url: string }>(
+//       `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
+//       {
+//         file: base64Image,
+//         public_id: `top-chess-uploads/${fideId}`,
+//         overwrite: true,
+//       },
+//       {
+//         auth: {
+//           username: cloudinaryApiKey,
+//           password: cloudinaryApiSecret,
+//         },
+//       },
+//     );
 
-    return response.data.secure_url;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Failed to save image to cloudinary:`, error.message);
-    } else {
-      console.error(`Failed to save image to cloudinary`);
-    }
+//     return response.data.secure_url;
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       console.error(`Failed to save image to cloudinary:`, error.message);
+//     } else {
+//       console.error(`Failed to save image to cloudinary`);
+//     }
 
-    return `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/top-chess-uploads/chess-player.jpg`;
-  }
-}
+//     return `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/top-chess-uploads/chess-player.jpg`;
+//   }
+// }
 
 export default {
   fetch: app.fetch,
@@ -369,43 +425,37 @@ export default {
     ctx.waitUntil(scrapeChessPlayers(env));
   },
 
-  async queue(batch: MessageBatch<{ fideId: number }>, env: Bindings) {
-    for (const msg of batch.messages) {
+  async queue(
+    batch: MessageBatch<{ fideId: number; name: string }>,
+    env: Bindings,
+  ) {
+    const neonClient = neon(env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (const message of batch.messages) {
       try {
-        const base64Image = await getChessPlayerBase64Image(msg.body.fideId);
+        const chessPlayerInfo = await getChessPlayerInfo(message.body.name);
 
-        if (base64Image !== null) {
-          const imageUrl = await saveBase64ImageToCloudinary(
-            base64Image,
-            msg.body.fideId,
-            env.CLOUDINARY_CLOUD_NAME,
-            env.CLOUDINARY_API_KEY,
-            env.CLOUDINARY_API_SECRET,
-          );
+        await db
+          .update(dbChessPlayers)
+          .set(chessPlayerInfo)
+          .where(eq(dbChessPlayers.fideId, message.body.fideId));
 
-          const neonClient = neon(env.NEON_DATABASE_URL);
-          const db = drizzle(neonClient);
-
-          await db
-            .update(dbChessPlayers)
-            .set({ imageUrl })
-            .where(eq(dbChessPlayers.fideId, msg.body.fideId));
-        } else {
-          console.warn("Could not find image for FIDE ID: " + msg.body.fideId);
-        }
-
-        msg.ack();
+        message.ack();
       } catch (error) {
         if (error instanceof Error) {
           console.error(
-            "Failed to process FIDE ID: " + msg.body.fideId,
+            "Failed to process FIDE ID: " + message.body.fideId,
             error.message,
           );
         } else {
-          console.error("Failed to process FIDE ID: " + msg.body.fideId);
+          console.error("Failed to process FIDE ID: " + message.body.fideId);
         }
-
-        msg.retry();
+      } finally {
+        await sleep(100);
       }
     }
   },

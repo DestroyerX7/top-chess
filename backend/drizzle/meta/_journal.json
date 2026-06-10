@@ -36,6 +36,20 @@
       "when": 1780910846004,
       "tag": "0004_curved_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781039547829,
+      "tag": "0005_fantastic_tana_nile",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781078009990,
+      "tag": "0006_magenta_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }
