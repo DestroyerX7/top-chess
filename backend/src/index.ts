@@ -11,7 +11,7 @@ type Bindings = {
   CLOUDINARY_CLOUD_NAME: string;
   CLOUDINARY_API_KEY: string;
   CLOUDINARY_API_SECRET: string;
-  CHESS_PLAYER_IMAGE_UPLOAD_QUEUE: Queue;
+  CHESS_PLAYER_WIKI_DATA_QUEUE: Queue;
 };
 
 type ScrapedChessPlayer = {
@@ -252,36 +252,35 @@ async function scrapeChessPlayers(env: Bindings) {
       },
     );
 
-    const chessPlayers: (typeof dbChessPlayers.$inferInsert)[] =
-      response.data.map((scrapedChessPlayer) => ({
-        fideId: scrapedChessPlayer.fideid,
-        name: scrapedChessPlayer.name,
-        flag: scrapedChessPlayer.flag,
-        countryName: scrapedChessPlayer.country_name,
-        rating: Number(scrapedChessPlayer.rating),
-        livePos: scrapedChessPlayer.live_pos,
-        ratingDiff: scrapedChessPlayer.raitingDiff,
-        posChangeValue: scrapedChessPlayer.pos_change_value,
-        yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
-        yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
-        gamesCount: scrapedChessPlayer.games_count,
-        age: scrapedChessPlayer.age,
-        birthday:
-          scrapedChessPlayer.birthday.length > 0
-            ? new Date(scrapedChessPlayer.birthday + " UTC")
-                .toISOString()
-                .split("T")[0]
-            : null,
-        bestPosTitle: scrapedChessPlayer.best_pos_title,
-        bestRatingTitle: scrapedChessPlayer.best_rating_title,
-        live: scrapedChessPlayer.live,
-        lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
-      }));
+    const chessPlayers = response.data.map((scrapedChessPlayer) => ({
+      fideId: scrapedChessPlayer.fideid,
+      name: scrapedChessPlayer.name,
+      flag: scrapedChessPlayer.flag,
+      countryName: scrapedChessPlayer.country_name,
+      rating: Number(scrapedChessPlayer.rating),
+      livePos: scrapedChessPlayer.live_pos,
+      ratingDiff: scrapedChessPlayer.raitingDiff,
+      posChangeValue: scrapedChessPlayer.pos_change_value,
+      yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
+      yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
+      gamesCount: scrapedChessPlayer.games_count,
+      age: scrapedChessPlayer.age,
+      birthday:
+        scrapedChessPlayer.birthday.length > 0
+          ? new Date(scrapedChessPlayer.birthday + " UTC")
+              .toISOString()
+              .split("T")[0]
+          : null,
+      bestPosTitle: scrapedChessPlayer.best_pos_title,
+      bestRatingTitle: scrapedChessPlayer.best_rating_title,
+      live: scrapedChessPlayer.live,
+      lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
+    }));
 
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
 
-    await db
+    const updatedChessPlayers = await db
       .insert(dbChessPlayers)
       .values(chessPlayers)
       .onConflictDoUpdate({
@@ -302,24 +301,35 @@ async function scrapeChessPlayers(env: Bindings) {
           live: sql`excluded.live`,
           lastUpdatedGmt: sql`excluded.last_updated_gmt`,
         },
-      });
+      })
+      .returning();
 
     const fideIds = chessPlayers.map((chessPlayer) => chessPlayer.fideId);
     await db
       .delete(dbChessPlayers)
       .where(notInArray(dbChessPlayers.fideId, fideIds));
 
-    console.log("Queueing consumers to save chess player images...");
-
-    await env.CHESS_PLAYER_IMAGE_UPLOAD_QUEUE.sendBatch(
-      response.data.map((scrapeChessPlayer) => ({
-        body: {
-          fideId: scrapeChessPlayer.fideid,
-          name: scrapeChessPlayer.name,
-        },
-        contentType: "json",
-      })),
+    const chessPlayersToQueue = updatedChessPlayers.filter(
+      (c) => c.wikipediaUrl === null,
     );
+
+    if (chessPlayersToQueue.length > 0) {
+      console.log(
+        `Queueing ${chessPlayersToQueue.length} chess players for wikipedia data fetching...`,
+      );
+
+      await env.CHESS_PLAYER_WIKI_DATA_QUEUE.sendBatch(
+        chessPlayersToQueue.map((chessPlayer) => ({
+          body: {
+            fideId: chessPlayer.fideId,
+            name: chessPlayer.name,
+          },
+          contentType: "json",
+        })),
+      );
+    } else {
+      console.log("No chess players to queue");
+    }
 
     console.log("Successfully scraped and saved chess players to database!");
   } catch (error) {
@@ -419,11 +429,13 @@ export default {
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
 
-    const sleep = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
-    // Total of 20 request per batch because max_batch_size is set to 10 in wrangler.jsonc file
-    for (const message of batch.messages) {
+    // Uses 2 requests total per message
+    const processMessage = async (
+      message: Message<{
+        fideId: number;
+        name: string;
+      }>,
+    ) => {
       try {
         // Uses 1 request per message
         const chessPlayerWikiData = await getChessPlayerWikiData(
@@ -446,10 +458,11 @@ export default {
         } else {
           console.error("Failed to process FIDE ID: " + message.body.fideId);
         }
-      } finally {
-        // Pausing for 100ms before moving to next message so wikipedia does not block access for spamming their api
-        await sleep(100);
       }
-    }
+    };
+
+    // Total of 20 requests per batch because max_batch_size is set to 10 in wrangler.jsonc file
+    const promises = batch.messages.map(processMessage);
+    await Promise.allSettled(promises);
   },
 };

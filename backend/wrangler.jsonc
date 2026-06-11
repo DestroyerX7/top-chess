@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "top-chess-backend",
+  "name": "top-chess",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-07",
   // "compatibility_flags": [
@@ -38,21 +38,21 @@
   "queues": {
     "producers": [
       {
-        "queue": "chess-player-image-uploads",
-        "binding": "CHESS_PLAYER_IMAGE_UPLOAD_QUEUE",
+        "queue": "chess-player-wiki-data",
+        "binding": "CHESS_PLAYER_WIKI_DATA_QUEUE",
       },
     ],
     "consumers": [
       {
-        "queue": "chess-player-image-uploads",
+        "queue": "chess-player-wiki-data",
         "max_batch_size": 10,
         "max_batch_timeout": 30,
         "max_retries": 1,
-        "dead_letter_queue": "chess-player-image-uploads-dlq",
+        "dead_letter_queue": "chess-player-wiki-data-dlq",
       },
     ],
   },
   "triggers": {
-    "crons": ["0 0 * * *"],
+    "crons": ["0 * * * *"],
   },
 }
