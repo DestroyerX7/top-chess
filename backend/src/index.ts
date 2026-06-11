@@ -5,15 +5,6 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { chessPlayers as dbChessPlayers } from "./db/schema";
 import { eq, notInArray, sql } from "drizzle-orm";
 
-type Bindings = {
-  NEON_DATABASE_URL: string;
-  SCRAPER_API_KEY: string;
-  CLOUDINARY_CLOUD_NAME: string;
-  CLOUDINARY_API_KEY: string;
-  CLOUDINARY_API_SECRET: string;
-  CHESS_PLAYER_WIKI_DATA_QUEUE: Queue;
-};
-
 type ScrapedChessPlayer = {
   // Identity
   fideid: number;
@@ -118,7 +109,7 @@ type WikiPage = {
   index: number;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 app.get("/get-top-chess-players", async (c) => {
   try {
@@ -238,7 +229,7 @@ async function getChessPlayerWikiData(name: string) {
   }
 }
 
-async function scrapeChessPlayers(env: Bindings) {
+async function scrapeChessPlayers(env: CloudflareBindings) {
   try {
     console.log("Scraping chess players...");
 
@@ -413,7 +404,7 @@ export default {
   // e.g await getData("https://url.com")
   async scheduled(
     controller: ScheduledController,
-    env: Bindings,
+    env: CloudflareBindings,
     ctx: ExecutionContext,
   ) {
     // scrapeChessPlayers() uses 3 total requests
@@ -424,7 +415,7 @@ export default {
   // e.g await getData("https://url.com")
   async queue(
     batch: MessageBatch<{ fideId: number; name: string }>,
-    env: Bindings,
+    env: CloudflareBindings,
   ) {
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
