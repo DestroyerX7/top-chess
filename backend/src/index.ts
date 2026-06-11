@@ -98,13 +98,9 @@ type ScrapedChessPlayer = {
   sort_helper_inv: string;
 };
 
-type WikiSearchResponse = {
+type WikiResponse = {
   query: {
-    search: {
-      pageid: number;
-      title: string;
-      snippet: string;
-    }[];
+    pages: Record<string, WikiPage>;
   };
 };
 
@@ -118,14 +114,8 @@ type WikiPage = {
     width: number;
     height: number;
   };
-  missing?: string;
   fullurl?: string;
-};
-
-type WikiContentResponse = {
-  query: {
-    pages: Record<string, WikiPage>;
-  };
+  index: number;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -185,26 +175,36 @@ app.get("/get-top-chess-players", async (c) => {
 //   return c.json(chessPlayerInfo);
 // });
 
-async function getChessPlayerInfo(name: string) {
+async function getChessPlayerWikiData(name: string) {
   try {
-    const searchResponse = await axios.get<WikiSearchResponse>(
+    const response = await axios.get<WikiResponse>(
       "https://en.wikipedia.org/w/api.php",
       {
         params: {
           action: "query",
-          list: "search",
-          srsearch: name,
+          generator: "search",
+          gsrsearch: name,
+          prop: "extracts|pageimages|description|info",
+          exintro: true, // only intro section
+          explaintext: true, // removes html
+          pithumbsize: 500, // thumbnail width in px
+          inprop: "url", // adds fullurl and canonicalurl to response
+          gsrnamespace: 0, // only search main articles, not talk pages etc
           format: "json",
         },
         headers: { "User-Agent": "top-chess-backend/1.0 (bojera22@gmail.com)" },
       },
     );
 
-    const search = searchResponse.data.query.search.find((s) =>
-      s.snippet.toLowerCase().includes("chess"),
+    const pages = Object.values(response.data.query.pages).toSorted(
+      (a, b) => a.index - b.index,
     );
 
-    if (search === undefined) {
+    const page = pages.find((p) =>
+      p.description?.toLowerCase().includes("chess"),
+    );
+
+    if (page === undefined) {
       return {
         imageUrl: null,
         bio: null,
@@ -213,38 +213,20 @@ async function getChessPlayerInfo(name: string) {
       };
     }
 
-    const pageId = search.pageid;
-
-    const contentResponse = await axios.get<WikiContentResponse>(
-      "https://en.wikipedia.org/w/api.php",
-      {
-        params: {
-          action: "query",
-          pageids: pageId,
-          prop: "extracts|pageimages|description",
-          exintro: true,
-          explaintext: true,
-          pithumbsize: 500,
-          format: "json",
-        },
-        headers: { "User-Agent": "top-chess-backend/1.0 (bojera22@gmail.com)" },
-      },
-    );
-
-    const page = contentResponse.data.query.pages[pageId];
-    const wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(search.title)}`;
-
     return {
       imageUrl: page.thumbnail?.source ?? null,
       bio: page.extract ?? null,
       description: page.description ?? null,
-      wikipediaUrl,
+      wikipediaUrl: page.fullurl ?? null,
     };
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Failed to get chess player info: ", error.message);
+      console.error(
+        "Failed to get chess player wikipedia data: ",
+        error.message,
+      );
     } else {
-      console.error("Failed to get chess player info");
+      console.error("Failed to get chess player wikipedia data");
     }
 
     return {
@@ -417,14 +399,19 @@ async function scrapeChessPlayers(env: Bindings) {
 export default {
   fetch: app.fetch,
 
+  // Cloudflare limit of 50 async requests in a scheduled cron job
+  // e.g await getData("https://url.com")
   async scheduled(
     controller: ScheduledController,
     env: Bindings,
     ctx: ExecutionContext,
   ) {
+    // scrapeChessPlayers() uses 3 total requests
     ctx.waitUntil(scrapeChessPlayers(env));
   },
 
+  // Cloudflare limit of 50 async requests per queue batch
+  // e.g await getData("https://url.com")
   async queue(
     batch: MessageBatch<{ fideId: number; name: string }>,
     env: Bindings,
@@ -435,13 +422,18 @@ export default {
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
+    // Total of 20 request per batch because max_batch_size is set to 10 in wrangler.jsonc file
     for (const message of batch.messages) {
       try {
-        const chessPlayerInfo = await getChessPlayerInfo(message.body.name);
+        // Uses 1 request per message
+        const chessPlayerWikiData = await getChessPlayerWikiData(
+          message.body.name,
+        );
 
+        // Uses 1 request per message
         await db
           .update(dbChessPlayers)
-          .set(chessPlayerInfo)
+          .set(chessPlayerWikiData)
           .where(eq(dbChessPlayers.fideId, message.body.fideId));
 
         message.ack();
@@ -455,6 +447,7 @@ export default {
           console.error("Failed to process FIDE ID: " + message.body.fideId);
         }
       } finally {
+        // Pausing for 100ms before moving to next message so wikipedia does not block access for spamming their api
         await sleep(100);
       }
     }
