@@ -113,6 +113,16 @@ const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 app.get("/get-top-chess-players", async (c) => {
   try {
+    const parsed = Number(c.req.query("limit"));
+    const limit = Number.isFinite(parsed) ? parsed : 100;
+
+    if (limit > 100 || limit < 1) {
+      return c.json(
+        { error: "Limit param must be between 1 and 100 inclusive" },
+        400,
+      );
+    }
+
     const neonClient = neon(c.env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
 
@@ -120,7 +130,7 @@ app.get("/get-top-chess-players", async (c) => {
       .select()
       .from(dbChessPlayers)
       .orderBy(dbChessPlayers.livePos)
-      .limit(100);
+      .limit(limit);
 
     return c.json(chessPlayers);
   } catch (error) {
@@ -156,14 +166,6 @@ app.get("/get-top-chess-players", async (c) => {
 
 //     return c.json({ error: "Failed to get chess player" }, 500);
 //   }
-// });
-
-// app.get("/test/:name", async (c) => {
-//   const name = c.req.param("name");
-
-//   const chessPlayerInfo = await getChessPlayerInfo(name);
-
-//   return c.json(chessPlayerInfo);
 // });
 
 async function getChessPlayerWikiData(name: string) {
@@ -213,7 +215,7 @@ async function getChessPlayerWikiData(name: string) {
   } catch (error) {
     if (error instanceof Error) {
       console.error(
-        "Failed to get chess player wikipedia data: ",
+        "Failed to get chess player wikipedia data:",
         error.message,
       );
     } else {
@@ -243,30 +245,49 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
       },
     );
 
-    const chessPlayers = response.data.map((scrapedChessPlayer) => ({
-      fideId: scrapedChessPlayer.fideid,
-      name: scrapedChessPlayer.name,
-      flag: scrapedChessPlayer.flag,
-      countryName: scrapedChessPlayer.country_name,
-      rating: Number(scrapedChessPlayer.rating),
-      livePos: scrapedChessPlayer.live_pos,
-      ratingDiff: scrapedChessPlayer.raitingDiff,
-      posChangeValue: scrapedChessPlayer.pos_change_value,
-      yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
-      yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
-      gamesCount: scrapedChessPlayer.games_count,
-      age: scrapedChessPlayer.age,
-      birthday:
-        scrapedChessPlayer.birthday.length > 0
-          ? new Date(scrapedChessPlayer.birthday + " UTC")
-              .toISOString()
-              .split("T")[0]
-          : null,
-      bestPosTitle: scrapedChessPlayer.best_pos_title,
-      bestRatingTitle: scrapedChessPlayer.best_rating_title,
-      live: scrapedChessPlayer.live,
-      lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
-    }));
+    const flagOverrides: Record<string, string> = {
+      ff: "ru",
+      en: "gb",
+    };
+
+    const countryNameOverrides: Record<string, string> = {
+      "FIDE (Not a National Fed.)": "Russia",
+    };
+
+    const chessPlayers = response.data.map((scrapedChessPlayer) => {
+      const flag =
+        flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag;
+      const countryName =
+        countryNameOverrides[scrapedChessPlayer.country_name] ??
+        scrapedChessPlayer.country_name;
+      const ratingHistory = scrapedChessPlayer.rating_history_sparkline;
+
+      return {
+        fideId: scrapedChessPlayer.fideid,
+        name: scrapedChessPlayer.name,
+        flag,
+        countryName,
+        rating: Number(scrapedChessPlayer.rating),
+        livePos: scrapedChessPlayer.live_pos,
+        ratingDiff: scrapedChessPlayer.raitingDiff,
+        posChangeValue: scrapedChessPlayer.pos_change_value,
+        yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
+        yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
+        gamesCount: scrapedChessPlayer.games_count,
+        age: scrapedChessPlayer.age,
+        birthday:
+          scrapedChessPlayer.birthday_unix !== null
+            ? new Date(scrapedChessPlayer.birthday_unix * 1000)
+                .toISOString()
+                .split("T")[0]
+            : null,
+        bestPosTitle: scrapedChessPlayer.best_pos_title,
+        bestRatingTitle: scrapedChessPlayer.best_rating_title,
+        live: scrapedChessPlayer.live,
+        lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
+        ratingHistory,
+      };
+    });
 
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
@@ -291,6 +312,7 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
           bestRatingTitle: sql`excluded.best_rating_title`,
           live: sql`excluded.live`,
           lastUpdatedGmt: sql`excluded.last_updated_gmt`,
+          ratingHistory: sql`excluded.rating_history`,
         },
       })
       .returning();
@@ -306,7 +328,7 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
 
     if (chessPlayersToQueue.length > 0) {
       console.log(
-        `Queueing ${chessPlayersToQueue.length} chess players for wikipedia data fetching...`,
+        `Queueing ${chessPlayersToQueue.length} chess player(s) for wikipedia data fetching...`,
       );
 
       await env.CHESS_PLAYER_WIKI_DATA_QUEUE.sendBatch(

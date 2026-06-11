@@ -1,0 +1,1 @@
+ALTER TABLE "chess_player" ADD COLUMN "rating_history" integer[];

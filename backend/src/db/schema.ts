@@ -32,6 +32,7 @@ export const chessPlayers = pgTable("chess_player", {
   bio: text("bio"),
   description: text("description"),
   wikipediaUrl: text("wikipedia_url"),
+  ratingHistory: integer("rating_history").array(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
