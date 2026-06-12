@@ -1,4 +1,3 @@
-import axios from "axios";
 import { Hono } from "hono";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -113,12 +112,12 @@ const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 app.get("/get-top-chess-players", async (c) => {
   try {
-    const parsed = Number(c.req.query("limit"));
-    const limit = Number.isFinite(parsed) ? parsed : 100;
+    const limitParam = c.req.query("limit");
+    const limit = limitParam !== undefined ? Number(limitParam) : 100;
 
-    if (limit > 100 || limit < 1) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
       return c.json(
-        { error: "Limit param must be between 1 and 100 inclusive" },
+        { error: "Limit param must be an integer between 1 and 100 inclusive" },
         400,
       );
     }
@@ -142,6 +141,32 @@ app.get("/get-top-chess-players", async (c) => {
 
     return c.json({ error: "Failed to get top chess players" }, 500);
   }
+});
+
+app.get("/image-proxy", async (c) => {
+  const url = c.req.query("url");
+
+  if (url === undefined) {
+    return c.json({ error: "Url not provided" }, 400);
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "top-chess/1.0 (bojera22@gmai.com)",
+      Referer: "https://en.wikipedia.org/",
+    },
+  });
+
+  if (!response.ok) {
+    return c.json({ error: `Failed to fetch image: ${response.status}` }, 502);
+  }
+
+  return new Response(response.body, {
+    headers: {
+      "Content-Type": response.headers.get("Content-Type") ?? "image/jpeg",
+      "Cache-Control": "public, max-age=604800", // cache for 7 days
+    },
+  });
 });
 
 // app.get("/get-chess-player/:fideId", async (c) => {
@@ -170,26 +195,33 @@ app.get("/get-top-chess-players", async (c) => {
 
 async function getChessPlayerWikiData(name: string) {
   try {
-    const response = await axios.get<WikiResponse>(
-      "https://en.wikipedia.org/w/api.php",
+    const params = new URLSearchParams({
+      action: "query",
+      generator: "search",
+      gsrsearch: name,
+      prop: "extracts|pageimages|description|info",
+      exintro: "true",
+      explaintext: "true",
+      pithumbsize: "500",
+      inprop: "url",
+      gsrnamespace: "0",
+      format: "json",
+    });
+
+    const response = await fetch(
+      `https://en.wikipedia.org/w/api.php?${params}`,
       {
-        params: {
-          action: "query",
-          generator: "search",
-          gsrsearch: name,
-          prop: "extracts|pageimages|description|info",
-          exintro: true, // only intro section
-          explaintext: true, // removes html
-          pithumbsize: 500, // thumbnail width in px
-          inprop: "url", // adds fullurl and canonicalurl to response
-          gsrnamespace: 0, // only search main articles, not talk pages etc
-          format: "json",
-        },
-        headers: { "User-Agent": "top-chess-backend/1.0 (bojera22@gmail.com)" },
+        headers: { "User-Agent": "top-chess/1.0 (bojera22@gmail.com)" },
       },
     );
 
-    const pages = Object.values(response.data.query.pages).toSorted(
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const data: WikiResponse = await response.json();
+
+    const pages = Object.values(data.query.pages).toSorted(
       (a, b) => a.index - b.index,
     );
 
@@ -208,7 +240,7 @@ async function getChessPlayerWikiData(name: string) {
 
     return {
       imageUrl: page.thumbnail?.source ?? null,
-      bio: page.extract ?? null,
+      bio: page.extract?.trim() ?? null,
       description: page.description ?? null,
       wikipediaUrl: page.fullurl ?? null,
     };
@@ -235,15 +267,18 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
   try {
     console.log("Scraping chess players...");
 
-    const response = await axios.get<ScrapedChessPlayer[]>(
-      "https://api.scraperapi.com",
-      {
-        params: {
-          api_key: env.SCRAPER_API_KEY,
-          url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
-        },
-      },
-    );
+    const params = new URLSearchParams({
+      api_key: env.SCRAPER_API_KEY,
+      url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
+    });
+
+    const response = await fetch(`https://api.scraperapi.com?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const data: ScrapedChessPlayer[] = await response.json();
 
     const flagOverrides: Record<string, string> = {
       ff: "ru",
@@ -254,7 +289,7 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
       "FIDE (Not a National Fed.)": "Russia",
     };
 
-    const chessPlayers = response.data.map((scrapedChessPlayer) => {
+    const chessPlayers = data.map((scrapedChessPlayer) => {
       const flag =
         flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag;
       const countryName =
@@ -299,6 +334,8 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
         target: dbChessPlayers.fideId,
         set: {
           name: sql`excluded.name`,
+          flag: sql`excluded.flag`,
+          countryName: sql`excluded.country_name`,
           rating: sql`excluded.rating`,
           livePos: sql`excluded.live_pos`,
           ratingDiff: sql`excluded.rating_diff`,
@@ -353,71 +390,6 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
     }
   }
 }
-
-// async function getChessPlayerBase64Image(fideId: number) {
-//   try {
-//     const { data: html } = await axios.get(
-//       `https://ratings.fide.com/profile/${fideId}`,
-//     );
-//     const response = new Response(html);
-
-//     let base64Image: string | null = null;
-
-//     await new HTMLRewriter()
-//       .on("img.profile-top__photo", {
-//         element(el) {
-//           base64Image = el.getAttribute("src");
-//         },
-//       })
-//       .transform(response)
-//       .text();
-
-//     return base64Image as string | null;
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       console.error("Failed to find FIDE chess player image:", error.message);
-//     } else {
-//       console.error("Failed to find FIDE chess player image");
-//     }
-
-//     return null;
-//   }
-// }
-
-// async function saveBase64ImageToCloudinary(
-//   base64Image: string,
-//   fideId: number,
-//   cloudinaryCloudName: string,
-//   cloudinaryApiKey: string,
-//   cloudinaryApiSecret: string,
-// ) {
-//   try {
-//     const response = await axios.post<{ secure_url: string }>(
-//       `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
-//       {
-//         file: base64Image,
-//         public_id: `top-chess-uploads/${fideId}`,
-//         overwrite: true,
-//       },
-//       {
-//         auth: {
-//           username: cloudinaryApiKey,
-//           password: cloudinaryApiSecret,
-//         },
-//       },
-//     );
-
-//     return response.data.secure_url;
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       console.error(`Failed to save image to cloudinary:`, error.message);
-//     } else {
-//       console.error(`Failed to save image to cloudinary`);
-//     }
-
-//     return `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/top-chess-uploads/chess-player.jpg`;
-//   }
-// }
 
 export default {
   fetch: app.fetch,

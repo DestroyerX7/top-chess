@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
-    "axios": "^1.17.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.23"
   },
