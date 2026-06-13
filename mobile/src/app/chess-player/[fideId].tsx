@@ -8,9 +8,9 @@ import {
 } from "expo-router";
 import { Image, Text, ScrollView, View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { flagStringToEmoji } from "..";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
+import { flagStringToEmoji } from "@/utils/flags";
 
 function StatRow({
   label,
@@ -224,7 +224,7 @@ export default function ChessPlayer() {
               label="World Rank"
               value={`#${chessPlayer.livePos}`}
               delta={chessPlayer.posChangeValue}
-              deltaInvert
+              // deltaInvert
               positiveSymbol="▲"
               negativeSymbol="▼"
             />
@@ -233,7 +233,7 @@ export default function ChessPlayer() {
               label="Year Ranking Change"
               value={Math.abs(chessPlayer.yearAgoRankingChange)}
               delta={chessPlayer.yearAgoRankingChange}
-              deltaInvert
+              // deltaInvert
               positiveSymbol="▲"
               negativeSymbol="▼"
             />
