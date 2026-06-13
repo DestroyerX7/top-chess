@@ -12,13 +12,6 @@ import { flagStringToEmoji } from "..";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 
-// const LIME = "#c4ff10";
-// const BG = "#000";
-// const SURFACE = "#101010";
-// const BORDER = "#181818";
-// const TEXT_PRIMARY = "#f0f0f0";
-// const TEXT_SECONDARY = "#888";
-
 function StatRow({
   label,
   value,
