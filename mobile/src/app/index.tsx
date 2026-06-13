@@ -1,28 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
   ImageBackground,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { getTopChessPlayers } from "../api/chessPlayers";
 import TopChessPlayers from "../components/TopChessPlayers";
+import { colors } from "@/constants/colors";
 
-const flagOverrides: Record<string, string> = {
-  ff: "ru",
-  en: "gb",
-};
-
-function flagStringToEmoji(flagString: string) {
-  const code = flagOverrides[flagString.toLowerCase()] ?? flagString;
-  return code
+export function flagStringToEmoji(flagString: string) {
+  return flagString
     .toUpperCase()
     .split("")
     .map((char) => String.fromCodePoint(0x1f1e6 - 65 + char.charCodeAt(0)))
@@ -42,20 +41,148 @@ export default function Index() {
 
   const [searchInput, setSearchInput] = useState("");
 
+  const insets = useSafeAreaInsets();
+  const fideLogoUrl =
+    "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
+
   useEffect(() => {
     if (chessPlayers !== undefined) {
-      const widgetChessPlayers = chessPlayers.map((chessPlayer) => ({
-        name: chessPlayer.name,
-        rating: chessPlayer.rating,
-        livePos: chessPlayer.livePos,
-        imageUrl: chessPlayer.imageUrl,
-      }));
+      const widgetChessPlayers = chessPlayers
+        .slice(0, 25)
+        .map((chessPlayer) => ({
+          name: chessPlayer.name,
+          rating: chessPlayer.rating,
+          livePos: chessPlayer.livePos,
+          imageUrl: chessPlayer.imageUrl
+            ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}` /*`https://top-chess.destroyerinc.workers.dev/image-proxy?url=${chessPlayer.imageUrl}`*/
+            : fideLogoUrl,
+        }));
 
       TopChessPlayers.updateSnapshot({
         widgetChessPlayers,
       });
     }
   }, [chessPlayers]);
+
+  if (isPending) {
+    return (
+      <SafeAreaView>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 16,
+            padding: 16,
+            alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Image
+            style={{ width: 48, height: 48, borderRadius: 8 }}
+            source={require("@/assets/images/icon-dark.png")}
+            alt="Top Chess Icon"
+          />
+
+          <View style={{ position: "relative", flex: 1 }}>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 100,
+                padding: 16,
+                paddingRight: 48,
+                color: colors.foreground,
+                backgroundColor: colors.muted,
+              }}
+              placeholder="Search"
+              placeholderTextColor={colors.mutedForeground}
+            />
+
+            <Ionicons
+              name="search"
+              size={20}
+              color={colors.mutedForeground}
+              style={{
+                position: "absolute",
+                right: 16,
+                top: "50%",
+                transform: [{ translateY: -10 }],
+              }}
+            />
+          </View>
+        </View>
+
+        <View style={[styles.grid]}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <View key={i} style={styles.chessPlayerGridItem}>
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: 16,
+                  backgroundColor: colors.card,
+                  padding: 16,
+                  justifyContent: "space-between",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 64,
+                      width: 64,
+                      backgroundColor: colors.secondary,
+                      borderRadius: 8,
+                    }}
+                  />
+
+                  <View
+                    style={{
+                      height: 32,
+                      width: 32,
+                      backgroundColor: colors.secondary,
+                      borderRadius: 8,
+                    }}
+                  />
+                </View>
+
+                <View style={{ gap: 8 }}>
+                  <View
+                    style={{
+                      height: 32,
+                      width: "75%",
+                      backgroundColor: colors.secondary,
+                      borderRadius: 8,
+                    }}
+                  />
+
+                  <View
+                    style={{
+                      height: 32,
+                      backgroundColor: colors.secondary,
+                      borderRadius: 8,
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error !== null) {
+    return (
+      <Text>
+        Somthing went wrong getting the top chess players. Plaese reload to try
+        again
+      </Text>
+    );
+  }
 
   if (chessPlayers === undefined) {
     return;
@@ -77,11 +204,13 @@ export default function Index() {
             gap: 16,
             padding: 16,
             alignItems: "center",
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
           }}
         >
           <Image
             style={{ width: 48, height: 48, borderRadius: 8 }}
-            source={require("@/assets/images/splash-screen-dark.png")}
+            source={require("@/assets/images/icon-dark.png")}
             alt="Top Chess Icon"
           />
 
@@ -89,14 +218,15 @@ export default function Index() {
             <TextInput
               style={{
                 borderWidth: 1,
-                borderColor: "white",
+                borderColor: colors.border,
                 borderRadius: 100,
                 padding: 16,
                 paddingRight: 48,
-                color: "white",
+                color: colors.foreground,
+                backgroundColor: colors.muted,
               }}
               placeholder="Search"
-              placeholderTextColor="white"
+              placeholderTextColor={colors.mutedForeground}
               onChangeText={(text) => setSearchInput(text)}
               value={searchInput}
             />
@@ -104,7 +234,7 @@ export default function Index() {
             <Ionicons
               name="search"
               size={20}
-              color="white"
+              color={colors.mutedForeground}
               style={{
                 position: "absolute",
                 right: 16,
@@ -116,7 +246,13 @@ export default function Index() {
         </View>
 
         <View style={{ padding: 16 }}>
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: colors.foreground,
+              fontSize: 16,
+              fontWeight: "700",
+            }}
+          >
             No chess players found
           </Text>
         </View>
@@ -125,18 +261,20 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={{ flex: 1, paddingTop: insets.top }}>
       <View
         style={{
           flexDirection: "row",
           gap: 16,
           padding: 16,
           alignItems: "center",
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
         }}
       >
         <Image
           style={{ width: 48, height: 48, borderRadius: 8 }}
-          source={require("@/assets/images/splash-screen-dark.png")}
+          source={require("@/assets/images/icon-dark.png")}
           alt="Top Chess Icon"
         />
 
@@ -144,22 +282,24 @@ export default function Index() {
           <TextInput
             style={{
               borderWidth: 1,
-              borderColor: "white",
+              borderColor: colors.border,
               borderRadius: 100,
               padding: 16,
               paddingRight: 48,
-              color: "white",
+              color: colors.foreground,
+              backgroundColor: colors.muted,
             }}
             placeholder="Search"
-            placeholderTextColor="white"
+            placeholderTextColor={colors.mutedForeground}
             onChangeText={(text) => setSearchInput(text)}
             value={searchInput}
+            autoCorrect={false}
           />
 
           <Ionicons
             name="search"
             size={20}
-            color="white"
+            color={colors.mutedForeground}
             style={{
               position: "absolute",
               right: 16,
@@ -174,61 +314,60 @@ export default function Index() {
         data={shownChessPlayers}
         numColumns={2}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 8 }}
+        contentContainerStyle={{
+          paddingTop: 8,
+          paddingHorizontal: 8,
+          paddingBottom: insets.bottom + 8,
+        }}
         renderItem={({ item: chessPlayer }) => (
-          <Link
-            href={{
-              pathname: "/chess-player/[fideId]",
-              params: { fideId: chessPlayer.fideId },
-            }}
+          <View
             style={{
-              padding: 8,
-              width: "50%",
+              flex: 1,
               aspectRatio: 1,
+              padding: 8,
+              maxWidth: "50%",
             }}
           >
-            <ImageBackground
-              source={{
-                uri: chessPlayer.imageUrl,
-              }}
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
-              imageStyle={{ borderRadius: 16 }}
-              key={chessPlayer.fideId}
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/chess-player/[fideId]",
+                  params: { fideId: chessPlayer.fideId },
+                })
+              }
+              style={{ flex: 1 }}
             >
-              <View
+              <ImageBackground
+                source={{
+                  uri: chessPlayer.imageUrl ?? fideLogoUrl,
+                }}
                 style={{
-                  borderRadius: 16,
                   padding: 8,
                   justifyContent: "space-between",
                   flex: 1,
-                  overflow: "visible",
                 }}
+                imageStyle={{ borderRadius: 16 }}
+                key={chessPlayer.fideId}
               >
                 <View
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
-                    overflow: "visible",
                   }}
                 >
                   <View
                     style={{
                       flexDirection: "column",
                       gap: 4,
-                      overflow: "visible",
                     }}
                   >
                     <Text
                       style={{
-                        color: "white",
+                        color: colors.foreground,
                         fontWeight: "700",
-                        textShadowColor: "black",
+                        textShadowColor: colors.background,
                         textShadowOffset: { width: 0, height: 2 },
                         textShadowRadius: 2,
-                        overflow: "visible",
                       }}
                     >
                       #{chessPlayer.livePos}
@@ -239,12 +378,11 @@ export default function Index() {
                         style={{
                           color:
                             chessPlayer.yearAgoRankingChange > 0
-                              ? "#c4ff10"
-                              : "red",
-                          textShadowColor: "black",
+                              ? colors.primary
+                              : colors.destructive,
+                          textShadowColor: colors.background,
                           textShadowOffset: { width: 0, height: 2 },
                           textShadowRadius: 2,
-                          overflow: "visible",
                         }}
                       >
                         {chessPlayer.yearAgoRankingChange > 0 ? "▲" : "▼"}
@@ -256,10 +394,9 @@ export default function Index() {
                   <Text
                     style={{
                       fontSize: 32,
-                      textShadowColor: "black",
+                      textShadowColor: colors.background,
                       textShadowOffset: { width: 0, height: 2 },
                       textShadowRadius: 2,
-                      overflow: "visible",
                     }}
                   >
                     {flagStringToEmoji(chessPlayer.flag)}
@@ -274,27 +411,26 @@ export default function Index() {
                   {chessPlayer.live && (
                     <Text
                       style={{
-                        color: "white",
+                        color: colors.foreground,
                         fontWeight: "700",
-                        textShadowColor: "black",
+                        textShadowColor: colors.background,
                         textShadowOffset: { width: 0, height: 2 },
                         textShadowRadius: 2,
                         lineHeight: 24,
                       }}
                     >
-                      🔴Live
+                      🔴 Live
                     </Text>
                   )}
 
                   <View style={{ flexDirection: "row", gap: 4 }}>
                     <Text
                       style={{
-                        color: "white",
+                        color: colors.foreground,
                         fontWeight: "700",
-                        textShadowColor: "black",
+                        textShadowColor: colors.background,
                         textShadowOffset: { width: 0, height: 2 },
                         textShadowRadius: 2,
-                        overflow: "visible",
                       }}
                     >
                       {chessPlayer.rating}
@@ -303,11 +439,13 @@ export default function Index() {
                     {chessPlayer.ratingDiff !== 0 && (
                       <Text
                         style={{
-                          color: chessPlayer.ratingDiff > 0 ? "#c4ff10" : "red",
-                          textShadowColor: "black",
+                          color:
+                            chessPlayer.ratingDiff > 0
+                              ? colors.primary
+                              : colors.destructive,
+                          textShadowColor: colors.background,
                           textShadowOffset: { width: 0, height: 2 },
                           textShadowRadius: 2,
-                          overflow: "visible",
                         }}
                       >
                         {chessPlayer.ratingDiff > 0 && "+"}
@@ -318,28 +456,33 @@ export default function Index() {
 
                   <Text
                     style={{
-                      color: "white",
+                      color: colors.foreground,
                       fontWeight: "700",
-                      textShadowColor: "black",
+                      textShadowColor: colors.background,
                       textShadowOffset: { width: 0, height: 2 },
                       textShadowRadius: 2,
-                      overflow: "visible",
                     }}
                   >
                     {chessPlayer.name}
                   </Text>
                 </View>
-              </View>
-            </ImageBackground>
-          </Link>
+              </ImageBackground>
+            </Pressable>
+          </View>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  grid: { padding: 8, flexDirection: "row", flexWrap: "wrap" },
+  chessPlayerGridItem: {
+    width: "50%",
+    aspectRatio: 1,
+    padding: 8,
   },
 });

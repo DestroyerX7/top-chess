@@ -1,3 +1,4 @@
+import { colors } from "@/constants/colors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 
@@ -10,10 +11,22 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: "#000000",
+            backgroundColor: colors.background,
           },
         }}
-      />
+      >
+        <Stack.Screen name="index" options={{ title: "Home" }} />
+
+        <Stack.Screen
+          name="chess-player/[fideId]"
+          options={{
+            headerShown: true,
+            headerStyle: { backgroundColor: colors.primary },
+            headerTitleStyle: { color: colors.primaryForeground },
+            headerBackButtonDisplayMode: "minimal",
+          }}
+        />
+      </Stack>
     </QueryClientProvider>
   );
 }

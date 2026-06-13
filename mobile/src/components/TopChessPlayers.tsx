@@ -1,5 +1,6 @@
 import { HStack, Image, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
+  aspectRatio,
   cornerRadius,
   font,
   frame,
@@ -45,7 +46,11 @@ const TopChessPlayers = (
               >
                 <Image
                   uiImage={chessPlayer.imageUrl}
-                  modifiers={[resizable()]}
+                  modifiers={[
+                    resizable(),
+                    aspectRatio({ contentMode: "fill" }),
+                    frame({ width: 64, height: 64 }),
+                  ]}
                 />
 
                 <VStack modifiers={[padding({ all: 8 })]}>

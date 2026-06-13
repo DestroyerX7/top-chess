@@ -18,14 +18,18 @@ export type ChessPlayer = {
   bestRatingTitle: string;
   live: boolean;
   lastUpdatedGmt: string;
-  imageUrl: string;
+  imageUrl: string | null;
+  wikipediaUrl: string | null;
+  bio: string | null;
+  description: string | null;
+  ratingHistory: number[] | null;
   createdAt: string;
   updatedAt: string;
 };
 
 export async function getTopChessPlayers() {
   const response = await axios.get<ChessPlayer[]>(
-    "https://top-chess-backend.destroyerinc.workers.dev/get-top-chess-players",
+    "https://top-chess.destroyerinc.workers.dev/get-top-chess-players",
   );
 
   return response.data;

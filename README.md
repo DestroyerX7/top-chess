@@ -1,12 +1,12 @@
 # Top Chess
 
-A chess application with a backend server and mobile client.
+A chess application with a Hono backend and mobile client.
 
 ## Project Structure
 
 ```
 top-chess/
-├── backend/   # Node.js backend server
+├── backend/   # Hono backend deployed on Cloudflare Workers
 └── mobile/    # Mobile application
 ```
 
