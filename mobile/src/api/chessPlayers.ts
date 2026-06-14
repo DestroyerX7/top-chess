@@ -34,3 +34,11 @@ export async function getTopChessPlayers() {
 
   return response.data;
 }
+
+export async function getChessPlayer(fideId: number | string) {
+  const response = await axios.get<ChessPlayer | null>(
+    `https://top-chess.destroyerinc.workers.dev/get-chess-player/${fideId}`,
+  );
+
+  return response.data;
+}

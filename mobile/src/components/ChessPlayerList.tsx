@@ -38,7 +38,7 @@ const ChessPlayerList = forwardRef<ChessPlayerListRef, Props>(
     },
     ref,
   ) => {
-    const flatListRef = useRef<FlatList>(null);
+    const flatListRef = useRef<FlatList<ChessPlayer>>(null);
 
     useImperativeHandle(ref, () => ({
       scrollToTop: () => {
@@ -71,7 +71,7 @@ const ChessPlayerList = forwardRef<ChessPlayerListRef, Props>(
             <Pressable
               onPress={() =>
                 router.push({
-                  pathname: "/chess-player/[fideId]",
+                  pathname: "/home/chess-player/[fideId]",
                   params: { fideId: chessPlayer.fideId },
                 })
               }
@@ -113,11 +113,11 @@ const ChessPlayerList = forwardRef<ChessPlayerListRef, Props>(
                       #{chessPlayer.livePos}
                     </Text>
 
-                    {chessPlayer.yearAgoRankingChange !== 0 && (
+                    {chessPlayer.posChangeValue !== 0 && (
                       <Text
                         style={{
                           color:
-                            chessPlayer.yearAgoRankingChange > 0
+                            chessPlayer.posChangeValue > 0
                               ? colors.primary
                               : colors.destructive,
                           textShadowColor: colors.background,
@@ -125,8 +125,8 @@ const ChessPlayerList = forwardRef<ChessPlayerListRef, Props>(
                           textShadowRadius: 2,
                         }}
                       >
-                        {chessPlayer.yearAgoRankingChange > 0 ? "▲" : "▼"}
-                        {Math.abs(chessPlayer.yearAgoRankingChange)}
+                        {chessPlayer.posChangeValue > 0 ? "▲" : "▼"}
+                        {Math.abs(chessPlayer.posChangeValue)}
                       </Text>
                     )}
                   </View>

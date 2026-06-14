@@ -1,5 +1,5 @@
-import { getTopChessPlayers } from "@/api/chessPlayers";
-import { useQuery } from "@tanstack/react-query";
+import { ChessPlayer, getChessPlayer } from "@/api/chessPlayers";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ExternalPathString,
   Link,
@@ -136,24 +136,30 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
   );
 }
 
-export default function ChessPlayer() {
+export default function ChessPlayerPage() {
   const { fideId } = useLocalSearchParams<{ fideId: string }>();
+  const queryClient = useQueryClient();
+
   const {
-    data: chessPlayers,
+    data: chessPlayer,
     isPending,
     error,
   } = useQuery({
-    queryKey: ["chessPlayers"],
-    queryFn: getTopChessPlayers,
-    staleTime: 1000 * 60 * 10,
+    queryKey: ["chessPlayer", fideId],
+    queryFn: () => getChessPlayer(fideId),
+    staleTime: Infinity,
+    initialData: () =>
+      queryClient
+        .getQueryData<ChessPlayer[]>(["chessPlayers"])
+        ?.find((c) => c.fideId === Number(fideId)) ?? null,
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(["chessPlayer", fideId])?.dataUpdatedAt,
   });
 
   const insets = useSafeAreaInsets();
 
-  const chessPlayer = chessPlayers?.find((c) => c.fideId === Number(fideId));
-
-  if (chessPlayer === undefined) {
-    return null;
+  if (chessPlayer === null) {
+    return;
   }
 
   return (

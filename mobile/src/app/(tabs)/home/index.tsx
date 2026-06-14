@@ -10,14 +10,14 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTopChessPlayers } from "../api/chessPlayers";
-import TopChessPlayers from "../components/TopChessPlayers";
 import { colors } from "@/constants/colors";
 import ChessPlayerList, {
   ChessPlayerListRef,
 } from "@/components/ChessPlayerList";
+import TopChessPlayers from "@/components/TopChessPlayers";
+import { getTopChessPlayers } from "@/api/chessPlayers";
 
-export default function Index() {
+export default function Home() {
   const {
     data: chessPlayers,
     isPending,
@@ -60,7 +60,13 @@ export default function Index() {
 
   if (isPending) {
     return (
-      <View style={{ flex: 1, paddingTop: insets.top }}>
+      <View
+        style={{
+          flex: 1,
+          paddingTop: insets.top,
+          backgroundColor: colors.background,
+        }}
+      >
         <View
           style={{
             flexDirection: "row",
@@ -186,7 +192,13 @@ export default function Index() {
         );
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top }}>
+    <View
+      style={{
+        flex: 1,
+        paddingTop: insets.top,
+        backgroundColor: colors.background,
+      }}
+    >
       <View
         style={{
           flexDirection: "row",
