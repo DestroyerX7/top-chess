@@ -6,9 +6,10 @@ import {
   boolean,
   timestamp,
   date,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
-export const chessPlayers = pgTable("chess_player", {
+export const chessPlayers = pgTable("chess_players", {
   fideId: integer("fide_id").primaryKey(),
   name: text("name").notNull(),
   flag: text("flag").notNull(),
@@ -40,4 +41,14 @@ export const chessPlayers = pgTable("chess_player", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+});
+
+export const dailyGames = pgTable("daily_games", {
+  key: text("key").primaryKey(),
+  data: jsonb("data").notNull(),
+});
+
+export const worldChampions = pgTable("world_champions", {
+  key: text("key").primaryKey(),
+  data: jsonb("data").notNull(),
 });

@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { chessPlayers as dbChessPlayers } from "./db/schema";
+import {
+  chessPlayers as dbChessPlayers,
+  dailyGames as dbDailyGames,
+  worldChampions as dbWorldChampions,
+} from "./db/schema";
 import { eq, notInArray, sql } from "drizzle-orm";
 
 type ScrapedChessPlayer = {
@@ -210,9 +214,54 @@ app.get("/get-chess-player/:fideId", async (c) => {
   }
 });
 
-app.get("/get-world-champions", async () => {
-  const response = await fetch("https://2700chess.com/next/world-champions");
-  return await response.json();
+app.get("/get-daily-games", async (c) => {
+  try {
+    const key = c.req.query("key") ?? "men";
+
+    if (key !== "men" && key !== "women") {
+      return c.json({ error: "Key must be either men or women" }, 400);
+    }
+
+    const neonClient = neon(c.env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const [dailyGames] = await db
+      .select()
+      .from(dbDailyGames)
+      .where(eq(dbDailyGames.key, "men"));
+
+    return c.json(dailyGames?.data);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Database fetch error:", error.message);
+    } else {
+      console.error("Database fetch error");
+    }
+
+    return c.json({ error: "Failed to get daily games" }, 500);
+  }
+});
+
+app.get("/get-world-champions", async (c) => {
+  try {
+    const neonClient = neon(c.env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const [worldChampions] = await db
+      .select()
+      .from(dbWorldChampions)
+      .where(eq(dbWorldChampions.key, "current"));
+
+    return c.json(worldChampions?.data);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Database fetch error:", error.message);
+    } else {
+      console.error("Database fetch error");
+    }
+
+    return c.json({ error: "Failed to get world champions" }, 500);
+  }
 });
 
 async function getChessPlayerWikiData(name: string) {
@@ -285,15 +334,46 @@ async function getChessPlayerWikiData(name: string) {
   }
 }
 
+async function getDailyGames(scraperApikey: string) {
+  const params = new URLSearchParams({
+    api_key: scraperApikey,
+    url: "https://2700chess.com/next/daily-games?gender=men",
+  });
+
+  const response = await fetch(`https://api.scraperapi.com?${params}`);
+
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+async function getWorldChampions(scraperApikey: string) {
+  const params = new URLSearchParams({
+    api_key: scraperApikey,
+    url: "https://2700chess.com/next/world-champions",
+  });
+
+  const response = await fetch(`https://api.scraperapi.com?${params}`);
+
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+// Urls that could be used in the future
+// "https://2700chess.com/next/events?gender=men&type=current"
+// "https://2700chess.com/next/events?gender=men&type=future"
+// "https://2700chess.com/next/events?gender=men&type=finished"
+
 async function scrapeChessPlayers(env: CloudflareBindings) {
   try {
     console.log("Scraping chess players...");
-
-    const yo = "https://2700chess.com/next/world-champions";
-    const hi = "https://2700chess.com/next/events?gender=men&type=current";
-    const what = "https://2700chess.com/next/events?gender=men&type=future";
-    const wtf = "https://2700chess.com/next/events?gender=men&type=finished";
-    const the = "https://2700chess.com/next/daily-games?gender=men";
 
     const params = new URLSearchParams({
       api_key: env.SCRAPER_API_KEY,
@@ -352,6 +432,9 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
       };
     });
 
+    const dailyGames = await getDailyGames(env.SCRAPER_API_KEY);
+    const worldChampions = await getWorldChampions(env.SCRAPER_API_KEY);
+
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
 
@@ -390,6 +473,29 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
     const chessPlayersToQueue = updatedChessPlayers.filter(
       (c) => c.wikipediaUrl === null,
     );
+
+    await db
+      .insert(dbDailyGames)
+      .values({
+        key: "men",
+        data: dailyGames,
+      })
+      .onConflictDoUpdate({
+        target: dbDailyGames.key,
+        set: {
+          data: sql`excluded.data`,
+        },
+      });
+
+    await db
+      .insert(dbWorldChampions)
+      .values({ key: "current", data: worldChampions })
+      .onConflictDoUpdate({
+        target: dbWorldChampions.key,
+        set: {
+          data: sql`excluded.data`,
+        },
+      });
 
     if (chessPlayersToQueue.length > 0) {
       console.log(
