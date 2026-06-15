@@ -117,7 +117,7 @@ app.get("/get-top-chess-players", async (c) => {
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
       return c.json(
-        { error: "Limit param must be an integer between 1 and 100 inclusive" },
+        { error: "limit param must be an integer in the range [1,100]" },
         400,
       );
     }
@@ -147,7 +147,7 @@ app.get("/image-proxy", async (c) => {
   const url = c.req.query("url");
 
   if (url === undefined) {
-    return c.json({ error: "Url not provided" }, 400);
+    return c.json({ error: "url not provided" }, 400);
   }
 
   const response = await fetch(url, {
@@ -169,29 +169,51 @@ app.get("/image-proxy", async (c) => {
   });
 });
 
-// app.get("/get-chess-player/:fideId", async (c) => {
-//   try {
-//     const fideId = Number(c.req.param("fideId"));
+app.get("/get-chess-player/:fideId", async (c) => {
+  try {
+    const fideIdParam = c.req.param("fideId");
 
-//     const neonClient = neon(c.env.NEON_DATABASE_URL);
-//     const db = drizzle(neonClient);
+    if (!fideIdParam) {
+      return c.json({ error: "fideId param is required" }, 400);
+    }
 
-//     const [chessPlayer] = await db
-//       .select()
-//       .from(dbChessPlayers)
-//       .where(eq(dbChessPlayers.fideId, fideId));
+    const fideId = Number(fideIdParam);
 
-//     return c.json(chessPlayer);
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       console.error("Database fetch error:", error.message);
-//     } else {
-//       console.error("Database fetch error");
-//     }
+    if (isNaN(fideId) || !Number.isInteger(fideId)) {
+      return c.json({ error: "fideId must be an integer" }, 400);
+    }
 
-//     return c.json({ error: "Failed to get chess player" }, 500);
-//   }
-// });
+    if (!Number.isInteger(fideId)) {
+      return c.json(
+        { error: "fideId param must be provided as an integer" },
+        400,
+      );
+    }
+
+    const neonClient = neon(c.env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const [chessPlayer] = await db
+      .select()
+      .from(dbChessPlayers)
+      .where(eq(dbChessPlayers.fideId, fideId));
+
+    return c.json(chessPlayer ?? null);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Database fetch error:", error.message);
+    } else {
+      console.error("Database fetch error");
+    }
+
+    return c.json({ error: "Failed to get chess player" }, 500);
+  }
+});
+
+app.get("/get-world-champions", async () => {
+  const response = await fetch("https://2700chess.com/next/world-champions");
+  return await response.json();
+});
 
 async function getChessPlayerWikiData(name: string) {
   try {
@@ -266,6 +288,12 @@ async function getChessPlayerWikiData(name: string) {
 async function scrapeChessPlayers(env: CloudflareBindings) {
   try {
     console.log("Scraping chess players...");
+
+    const yo = "https://2700chess.com/next/world-champions";
+    const hi = "https://2700chess.com/next/events?gender=men&type=current";
+    const what = "https://2700chess.com/next/events?gender=men&type=future";
+    const wtf = "https://2700chess.com/next/events?gender=men&type=finished";
+    const the = "https://2700chess.com/next/daily-games?gender=men";
 
     const params = new URLSearchParams({
       api_key: env.SCRAPER_API_KEY,

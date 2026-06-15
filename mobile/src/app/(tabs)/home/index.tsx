@@ -193,6 +193,7 @@ export default function Home() {
 
   return (
     <View
+      // collapsable={false}
       style={{
         flex: 1,
         paddingTop: insets.top,

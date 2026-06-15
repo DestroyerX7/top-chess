@@ -917,112 +917,124 @@ export default function Live() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
+    // <View
+    //   collapsable={false}
+    //   style={{
+    //     flex: 1,
+    //     backgroundColor: colors.background,
+    //     paddingTop: insets.top,
+    //     paddingBottom: insets.bottom,
+    //   }}
+    // >
+    <ScrollView
+      // style={{ paddingTop: insets.top /*, paddingBottom: insets.bottom*/ }}
+      contentContainerStyle={{
         paddingTop: insets.top,
-        paddingBottom: insets.bottom,
+        gap: 16,
+        padding: 16,
+        overflow: "hidden",
       }}
     >
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        {Object.entries(chessSchedule).map(([date, daySchedule]) => (
-          <View key={date}>
-            <Text style={{ color: colors.foreground, marginBottom: 16 }}>
-              {date}
-            </Text>
+      {Object.entries(chessSchedule).map(([date, daySchedule]) => (
+        <View key={date}>
+          <Text style={{ color: colors.foreground, marginBottom: 16 }}>
+            {date}
+          </Text>
 
-            <View style={{ gap: 16 }}>
-              {Object.entries(daySchedule).map(
-                ([tournamentName, tournament]) => (
-                  <View
-                    key={tournamentName}
-                    style={{
-                      backgroundColor: colors.card,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
-                      padding: 16,
-                    }}
-                  >
+          <View style={{ gap: 16 }}>
+            {Object.entries(daySchedule).map(([tournamentName, tournament]) => (
+              <View
+                key={tournamentName}
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 8,
+                  padding: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.primary,
+                    fontSize: 18,
+                    fontWeight: "700",
+                    marginBottom: 4,
+                  }}
+                >
+                  {tournamentName}
+                </Text>
+
+                {Object.entries(tournament.rounds).map(([roundName, games]) => (
+                  <View key={roundName}>
                     <Text
                       style={{
-                        color: colors.primary,
-                        fontSize: 18,
-                        fontWeight: "700",
-                        marginBottom: 4,
+                        color: colors.mutedForeground,
+                        fontStyle: "italic",
+                        fontSize: 16,
+                        fontWeight: "600",
                       }}
                     >
-                      {tournamentName}
+                      {roundName}
                     </Text>
 
-                    {Object.entries(tournament.rounds).map(
-                      ([roundName, games]) => (
-                        <View key={roundName}>
+                    <View
+                      style={{
+                        height: 1,
+                        backgroundColor: colors.border,
+                        marginVertical: 16,
+                      }}
+                    />
+
+                    <View style={{ gap: 16 }}>
+                      {games.map((game, index) => (
+                        <View
+                          key={game.id ?? index}
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                          }}
+                        >
                           <Text
                             style={{
-                              color: colors.mutedForeground,
-                              marginBottom: 16,
-                              fontStyle: "italic",
-                              fontSize: 16,
-                              fontWeight: "600",
+                              color: colors.cardForeground,
+                              flex: 2,
                             }}
                           >
-                            {roundName}
+                            {game.player_1_display}
                           </Text>
 
-                          <View style={{ gap: 16 }}>
-                            {games.map((game, index) => (
-                              <View
-                                key={game.id ?? index}
-                                style={{
-                                  flexDirection: "row",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    color: colors.cardForeground,
-                                    flex: 2,
-                                  }}
-                                >
-                                  {game.player_1_display}
-                                </Text>
+                          <Text
+                            style={{
+                              color: colors.primary,
+                              flex: 1,
+                              textAlign: "center",
+                            }}
+                          >
+                            {game.result.text.length > 0
+                              ? game.result.text
+                              : "vs"}
+                          </Text>
 
-                                <Text
-                                  style={{
-                                    color: colors.primary,
-                                    flex: 1,
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  {game.result.text.length > 0
-                                    ? game.result.text
-                                    : "vs"}
-                                </Text>
-
-                                <Text
-                                  style={{
-                                    color: colors.cardForeground,
-                                    flex: 2,
-                                    textAlign: "right",
-                                  }}
-                                >
-                                  {game.player_2_display}
-                                </Text>
-                              </View>
-                            ))}
-                          </View>
+                          <Text
+                            style={{
+                              color: colors.cardForeground,
+                              flex: 2,
+                              textAlign: "right",
+                            }}
+                          >
+                            {game.player_2_display}
+                          </Text>
                         </View>
-                      ),
-                    )}
+                      ))}
+                    </View>
                   </View>
-                ),
-              )}
-            </View>
+                ))}
+              </View>
+            ))}
           </View>
-        ))}
-      </ScrollView>
-    </View>
+        </View>
+      ))}
+    </ScrollView>
+    // </View>
   );
 }
