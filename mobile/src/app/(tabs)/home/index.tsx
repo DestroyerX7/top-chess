@@ -1,21 +1,13 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCallback, useEffect, useState } from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/colors";
-import ChessPlayerList, {
-  ChessPlayerListRef,
-} from "@/components/ChessPlayerList";
 import TopChessPlayers from "@/components/TopChessPlayers";
-import { getTopChessPlayers } from "@/api/chessPlayers";
+import { ChessPlayer, getTopChessPlayers } from "@/api/chessPlayers";
+import { router, Stack } from "expo-router";
+import ChessPlayerCard, {
+  ChessPlayerCardSkeleton,
+} from "@/components/ChessPlayerCard";
 
 export default function Home() {
   const {
@@ -33,11 +25,8 @@ export default function Home() {
 
   const [searchInput, setSearchInput] = useState("");
 
-  const insets = useSafeAreaInsets();
   const fideLogoUrl =
     "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
-
-  const chessPlayerListRef = useRef<ChessPlayerListRef>(null);
 
   useEffect(() => {
     if (chessPlayers !== undefined) {
@@ -58,263 +47,97 @@ export default function Home() {
     }
   }, [chessPlayers]);
 
-  if (isPending) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          paddingTop: insets.top,
-          backgroundColor: colors.background,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 16,
-            padding: 16,
-            alignItems: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: colors.border,
-          }}
-        >
-          <Image
-            style={{ width: 48, height: 48, borderRadius: 8 }}
-            source={require("@/assets/images/icon-dark.png")}
-            alt="Top Chess Icon"
-          />
+  const handlePress = useCallback(
+    (fideId: number) => {
+      router.push({
+        pathname: "/home/chess-player/[fideId]",
+        params: { fideId },
+      });
+    },
+    [router],
+  );
 
-          <View style={{ position: "relative", flex: 1 }}>
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 100,
-                padding: 16,
-                paddingRight: 48,
-                color: colors.foreground,
-                backgroundColor: colors.muted,
-              }}
-              placeholder="Search"
-              placeholderTextColor={colors.mutedForeground}
-            />
-
-            <Ionicons
-              name="search"
-              size={20}
-              color={colors.mutedForeground}
-              style={{
-                position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: [{ translateY: -10 }],
-              }}
-            />
-          </View>
-        </View>
-
-        <View style={[styles.grid]}>
-          {Array.from({ length: 10 }).map((_, i) => (
-            <View key={i} style={styles.chessPlayerGridItem}>
-              <View
-                style={{
-                  flex: 1,
-                  borderRadius: 16,
-                  backgroundColor: colors.card,
-                  padding: 16,
-                  justifyContent: "space-between",
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View
-                    style={{
-                      height: 64,
-                      width: 64,
-                      backgroundColor: colors.secondary,
-                      borderRadius: 8,
-                    }}
-                  />
-
-                  <View
-                    style={{
-                      height: 32,
-                      width: 32,
-                      backgroundColor: colors.secondary,
-                      borderRadius: 8,
-                    }}
-                  />
-                </View>
-
-                <View style={{ gap: 8 }}>
-                  <View
-                    style={{
-                      height: 32,
-                      width: "75%",
-                      backgroundColor: colors.secondary,
-                      borderRadius: 8,
-                    }}
-                  />
-
-                  <View
-                    style={{
-                      height: 32,
-                      backgroundColor: colors.secondary,
-                      borderRadius: 8,
-                    }}
-                  />
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  }
-
-  if (error !== null) {
-    return (
-      <Text>
-        Somthing went wrong getting the top chess players. Plaese reload to try
-        again
-      </Text>
-    );
-  }
+  const renderItem = useCallback(
+    ({ item: chessPlayer }: { item: ChessPlayer }) => (
+      <ChessPlayerCard chessPlayer={chessPlayer} onPress={handlePress} />
+    ),
+    [handlePress],
+  );
 
   const shownChessPlayers =
     searchInput.length < 1
-      ? chessPlayers
-      : chessPlayers.filter((c) =>
+      ? (chessPlayers ?? [])
+      : (chessPlayers?.filter((c) =>
           c.name.toLowerCase().includes(searchInput.toLowerCase()),
-        );
+        ) ?? []);
 
   return (
-    <View
-      // collapsable={false}
-      style={{
-        flex: 1,
-        paddingTop: insets.top,
-        backgroundColor: colors.background,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 16,
-          padding: 16,
-          alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+    <>
+      <Stack.Screen
+        options={{
+          title: "Top Chess",
+          headerLargeTitle: true,
+          headerSearchBarOptions: {
+            placeholder: "Search...",
+            onChangeText: (e) => setSearchInput(e.nativeEvent.text),
+            onCancelButtonPress: () => setSearchInput(""),
+            hideWhenScrolling: false,
+          },
         }}
-      >
-        <Pressable onPress={() => chessPlayerListRef.current?.scrollToTop()}>
-          <Image
-            style={{ width: 48, height: 48, borderRadius: 8 }}
-            source={require("@/assets/images/icon-dark.png")}
-            alt="Top Chess Icon"
-          />
-        </Pressable>
+      />
 
-        <View style={{ position: "relative", flex: 1 }}>
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 100,
-              padding: 16,
-              paddingRight: 48,
-              color: colors.foreground,
-              backgroundColor: colors.muted,
-            }}
-            placeholder="Search"
-            placeholderTextColor={colors.mutedForeground}
-            onChangeText={setSearchInput}
-            value={searchInput}
-            autoCorrect={false}
-            spellCheck={false}
-            returnKeyType="search"
-          />
+      <FlatList
+        contentInsetAdjustmentBehavior="automatic"
+        data={isPending ? Array(15).fill(null) : shownChessPlayers}
+        numColumns={2}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 8 }}
+        keyExtractor={(item, index) =>
+          isPending ? String(index) : String(item.fideId)
+        }
+        renderItem={isPending ? () => <ChessPlayerCardSkeleton /> : renderItem}
+        refreshing={isFetching}
+        onRefresh={() => {
+          if (!isStale) {
+            return;
+          }
 
-          {searchInput.length === 0 ? (
-            <Ionicons
-              name="search"
-              size={20}
-              color={colors.mutedForeground}
-              style={{
-                position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: [{ translateY: -10 }],
-              }}
-            />
+          refetch();
+        }}
+        ListEmptyComponent={
+          error === null ? (
+            <View style={{ padding: 8 }}>
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: 16,
+                  fontWeight: "700",
+                }}
+              >
+                No chess players found
+              </Text>
+            </View>
           ) : (
-            <Pressable
-              style={{
-                position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: [{ translateY: -10 }],
-              }}
-              onPress={() => setSearchInput("")}
-            >
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={colors.mutedForeground}
-              />
-            </Pressable>
-          )}
-        </View>
-      </View>
-
-      {shownChessPlayers.length === 0 ? (
-        <View style={{ padding: 16 }}>
-          <Text
-            style={{
-              color: colors.foreground,
-              fontSize: 16,
-              fontWeight: "700",
-            }}
-          >
-            No chess players found
-          </Text>
-        </View>
-      ) : (
-        <ChessPlayerList
-          ref={chessPlayerListRef}
-          chessPlayers={shownChessPlayers}
-          numColumns={2}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: 8,
-            paddingHorizontal: 8,
-            paddingBottom: insets.bottom + 8,
-          }}
-          isFetching={isFetching}
-          refresh={() => {
-            if (!isStale) {
-              return;
-            }
-
-            refetch();
-          }}
-        />
-      )}
-    </View>
+            <View style={{ padding: 8 }}>
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: 16,
+                  fontWeight: "700",
+                }}
+              >
+                Something went wrong, plaese rerfesh to try again
+              </Text>
+            </View>
+          )
+        }
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  grid: { padding: 8, flexDirection: "row", flexWrap: "wrap" },
-  chessPlayerGridItem: {
-    width: "50%",
-    aspectRatio: 1,
-    padding: 8,
   },
 });

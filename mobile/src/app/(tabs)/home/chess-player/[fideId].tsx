@@ -7,7 +7,6 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import { Image, Text, ScrollView, View, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/utils/flags";
@@ -156,157 +155,155 @@ export default function ChessPlayerPage() {
       queryClient.getQueryState(["chessPlayer", fideId])?.dataUpdatedAt,
   });
 
-  const insets = useSafeAreaInsets();
-
   if (chessPlayer === null) {
     return;
   }
 
   return (
     <>
-      <Stack.Screen options={{ title: chessPlayer.name }} />
+      <Stack.Screen
+        options={{
+          headerLargeTitle: true,
+          title: chessPlayer.name,
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
 
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.scroll,
-            { paddingBottom: insets.bottom + 16 },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Hero image ── */}
-          <View style={styles.heroContainer}>
-            <Image
-              source={{
-                uri:
-                  chessPlayer.imageUrl ??
-                  "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg",
-              }}
-              style={styles.heroImage}
-            />
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: 16 }]}
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        {/* ── Hero image ── */}
+        <View style={styles.heroContainer}>
+          <Image
+            source={{
+              uri:
+                chessPlayer.imageUrl ??
+                "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg",
+            }}
+            style={styles.heroImage}
+          />
 
-            {/* Gradient overlay name badge */}
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroName}>{chessPlayer.name}</Text>
+          {/* Gradient overlay name badge */}
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroName}>{chessPlayer.name}</Text>
 
-              <Text style={styles.heroCountry}>
-                {chessPlayer.countryName} {flagStringToEmoji(chessPlayer.flag)}
+            <Text style={styles.heroCountry}>
+              {chessPlayer.countryName} {flagStringToEmoji(chessPlayer.flag)}
+            </Text>
+
+            {chessPlayer.live && (
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontWeight: "700",
+                  lineHeight: 39,
+                  fontSize: 26,
+                }}
+              >
+                🔴 Live
               </Text>
-
-              {chessPlayer.live && (
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontWeight: "700",
-                    lineHeight: 39,
-                    fontSize: 26,
-                  }}
-                >
-                  🔴 Live
-                </Text>
-              )}
-            </View>
-          </View>
-
-          {/* ── Description ── */}
-          {chessPlayer.description !== null && (
-            <Text style={styles.description}>{chessPlayer.description}</Text>
-          )}
-
-          {/* ── Chess stats ── */}
-          <SectionCard title="Chess Rating">
-            <StatRow
-              label="Live Rating"
-              value={chessPlayer.rating}
-              delta={chessPlayer.ratingDiff}
-            />
-
-            <StatRow
-              label="Year Rating Change"
-              value={`${chessPlayer.yearAgoRatingChange > 0 ? "+" : ""}${chessPlayer.yearAgoRatingChange}`}
-            />
-
-            <StatRow
-              label="World Rank"
-              value={`#${chessPlayer.livePos}`}
-              delta={chessPlayer.posChangeValue}
-              // deltaInvert
-              positiveSymbol="▲"
-              negativeSymbol="▼"
-            />
-
-            <StatRow
-              label="Year Ranking Change"
-              value={Math.abs(chessPlayer.yearAgoRankingChange)}
-              delta={chessPlayer.yearAgoRankingChange}
-              // deltaInvert
-              positiveSymbol="▲"
-              negativeSymbol="▼"
-            />
-
-            <StatRow label="Recent Games" value={chessPlayer.gamesCount} />
-
-            <StatRow label="FIDE ID" value={chessPlayer.fideId} />
-          </SectionCard>
-
-          {/* ── About ── */}
-          <SectionCard title="About">
-            <StatRow
-              label="Country"
-              value={`${chessPlayer.countryName} ${flagStringToEmoji(chessPlayer.flag)}`}
-            />
-
-            {chessPlayer.birthday !== null && (
-              <StatRow label="Birthday" value={chessPlayer.birthday} />
             )}
+          </View>
+        </View>
 
-            <StatRow label="Age" value={chessPlayer.age} />
+        {/* ── Description ── */}
+        {chessPlayer.description !== null && (
+          <Text style={styles.description}>{chessPlayer.description}</Text>
+        )}
+
+        {/* ── Chess stats ── */}
+        <SectionCard title="Chess Rating">
+          <StatRow
+            label="Live Rating"
+            value={chessPlayer.rating}
+            delta={chessPlayer.ratingDiff}
+          />
+
+          <StatRow
+            label="Year Rating Change"
+            value={`${chessPlayer.yearAgoRatingChange > 0 ? "+" : ""}${chessPlayer.yearAgoRatingChange}`}
+          />
+
+          <StatRow
+            label="World Rank"
+            value={`#${chessPlayer.livePos}`}
+            delta={chessPlayer.posChangeValue}
+            // deltaInvert
+            positiveSymbol="▲"
+            negativeSymbol="▼"
+          />
+
+          <StatRow
+            label="Year Ranking Change"
+            value={Math.abs(chessPlayer.yearAgoRankingChange)}
+            delta={chessPlayer.yearAgoRankingChange}
+            // deltaInvert
+            positiveSymbol="▲"
+            negativeSymbol="▼"
+          />
+
+          <StatRow label="Recent Games" value={chessPlayer.gamesCount} />
+
+          <StatRow label="FIDE ID" value={chessPlayer.fideId} />
+        </SectionCard>
+
+        {/* ── About ── */}
+        <SectionCard title="About">
+          <StatRow
+            label="Country"
+            value={`${chessPlayer.countryName} ${flagStringToEmoji(chessPlayer.flag)}`}
+          />
+
+          {chessPlayer.birthday !== null && (
+            <StatRow label="Birthday" value={chessPlayer.birthday} />
+          )}
+
+          <StatRow label="Age" value={chessPlayer.age} />
+        </SectionCard>
+
+        {/* ── Achievements ── */}
+        <SectionCard title="Achievements">
+          <Text style={styles.achievementText}>
+            {chessPlayer.bestRatingTitle}
+          </Text>
+
+          <Text style={styles.achievementText}>{chessPlayer.bestPosTitle}</Text>
+        </SectionCard>
+
+        {/* ── Chart ── */}
+        {chessPlayer.ratingHistory !== null && (
+          <RatingHistoryChart
+            ratingHistory={[
+              ...chessPlayer.ratingHistory,
+              Math.round(chessPlayer.rating),
+            ]}
+          />
+        )}
+
+        {/* ── Bio ── */}
+        {chessPlayer.bio !== null && (
+          <SectionCard title="Biography">
+            {chessPlayer.bio.split("\n").map((text, index) => (
+              <Text key={index} style={styles.bioText}>
+                {text}
+              </Text>
+            ))}
           </SectionCard>
+        )}
 
-          {/* ── Achievements ── */}
-          <SectionCard title="Achievements">
-            <Text style={styles.achievementText}>
-              {chessPlayer.bestRatingTitle}
-            </Text>
-
-            <Text style={styles.achievementText}>
-              {chessPlayer.bestPosTitle}
-            </Text>
-          </SectionCard>
-
-          {/* ── Chart ── */}
-          {chessPlayer.ratingHistory !== null && (
-            <RatingHistoryChart
-              ratingHistory={[
-                ...chessPlayer.ratingHistory,
-                Math.round(chessPlayer.rating),
-              ]}
-            />
-          )}
-
-          {/* ── Bio ── */}
-          {chessPlayer.bio !== null && (
-            <SectionCard title="Biography">
-              {chessPlayer.bio.split("\n").map((text, index) => (
-                <Text key={index} style={styles.bioText}>
-                  {text}
-                </Text>
-              ))}
-            </SectionCard>
-          )}
-
-          {/* ── Wikipedia link ── */}
-          {chessPlayer.wikipediaUrl !== null && (
-            <Link
-              href={chessPlayer.wikipediaUrl as ExternalPathString}
-              target="_blank"
-              style={styles.wikiLink}
-            >
-              Read on Wikipedia →
-            </Link>
-          )}
-        </ScrollView>
-      </View>
+        {/* ── Wikipedia link ── */}
+        {chessPlayer.wikipediaUrl !== null && (
+          <Link
+            href={chessPlayer.wikipediaUrl as ExternalPathString}
+            target="_blank"
+            style={styles.wikiLink}
+          >
+            Read on Wikipedia →
+          </Link>
+        )}
+      </ScrollView>
     </>
   );
 }

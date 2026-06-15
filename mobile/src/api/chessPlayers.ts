@@ -27,6 +27,33 @@ export type ChessPlayer = {
   updatedAt: string;
 };
 
+export type Result = {
+  text: string;
+  url: string;
+};
+
+export type Game = {
+  player_1: string;
+  player_2: string;
+  result: Result;
+  player_1_fide_id: number;
+  player_2_fide_id: number;
+  player_1_display: string;
+  player_2_display: string;
+  id?: number; // optional — not present on unplayed games
+};
+
+export type Round = Record<string, Game[]>;
+
+export type Tournament = {
+  web_url: string;
+  rounds: Round;
+};
+
+export type DaySchedule = Record<string, Tournament>;
+
+export type ChessSchedule = Record<string, DaySchedule>;
+
 export async function getTopChessPlayers() {
   const response = await axios.get<ChessPlayer[]>(
     "https://top-chess.destroyerinc.workers.dev/get-top-chess-players",
@@ -38,6 +65,14 @@ export async function getTopChessPlayers() {
 export async function getChessPlayer(fideId: number | string) {
   const response = await axios.get<ChessPlayer | null>(
     `https://top-chess.destroyerinc.workers.dev/get-chess-player/${fideId}`,
+  );
+
+  return response.data;
+}
+
+export async function getDailyGames() {
+  const response = await axios.get<ChessSchedule>(
+    "https://top-chess.destroyerinc.workers.dev/get-daily-games",
   );
 
   return response.data;

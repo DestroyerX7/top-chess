@@ -5,7 +5,6 @@ import { DynamicColorIOS } from "react-native";
 export default function RootLayout() {
   return (
     <NativeTabs
-      backgroundColor="transparent"
       labelStyle={{
         // For the text color
         color: DynamicColorIOS({
