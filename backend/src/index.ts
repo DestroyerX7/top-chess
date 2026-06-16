@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { neon, NeonQueryFunction } from "@neondatabase/serverless";
+import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
 import {
   chessPlayers as dbChessPlayers,
   dailyGames as dbDailyGames,
@@ -334,49 +334,18 @@ async function getChessPlayerWikiData(name: string) {
   }
 }
 
-async function getDailyGames(scraperApikey: string) {
-  const params = new URLSearchParams({
-    api_key: scraperApikey,
-    url: "https://2700chess.com/next/daily-games?gender=men",
-  });
-
-  const response = await fetch(`https://api.scraperapi.com?${params}`);
-
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data;
-}
-
-async function getWorldChampions(scraperApikey: string) {
-  const params = new URLSearchParams({
-    api_key: scraperApikey,
-    url: "https://2700chess.com/next/world-champions",
-  });
-
-  const response = await fetch(`https://api.scraperapi.com?${params}`);
-
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data;
-}
-
-// Urls that could be used in the future
-// "https://2700chess.com/next/events?gender=men&type=current"
-// "https://2700chess.com/next/events?gender=men&type=future"
-// "https://2700chess.com/next/events?gender=men&type=finished"
-
-async function scrapeChessPlayers(env: CloudflareBindings) {
+async function scrapeChessPlayers(
+  scraperApikey: string,
+  chessPlayerWikiDataQueue: Queue,
+  db: NeonHttpDatabase<Record<string, never>> & {
+    $client: NeonQueryFunction<false, false>;
+  },
+) {
   try {
     console.log("Scraping chess players...");
 
     const params = new URLSearchParams({
-      api_key: env.SCRAPER_API_KEY,
+      api_key: scraperApikey,
       url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
     });
 
@@ -397,46 +366,33 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
       "FIDE (Not a National Fed.)": "Russia",
     };
 
-    const chessPlayers = data.map((scrapedChessPlayer) => {
-      const flag =
-        flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag;
-      const countryName =
+    const chessPlayers = data.map((scrapedChessPlayer) => ({
+      fideId: scrapedChessPlayer.fideid,
+      name: scrapedChessPlayer.name,
+      flag: flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag,
+      countryName:
         countryNameOverrides[scrapedChessPlayer.country_name] ??
-        scrapedChessPlayer.country_name;
-      const ratingHistory = scrapedChessPlayer.rating_history_sparkline;
-
-      return {
-        fideId: scrapedChessPlayer.fideid,
-        name: scrapedChessPlayer.name,
-        flag,
-        countryName,
-        rating: Number(scrapedChessPlayer.rating),
-        livePos: scrapedChessPlayer.live_pos,
-        ratingDiff: scrapedChessPlayer.raitingDiff,
-        posChangeValue: scrapedChessPlayer.pos_change_value,
-        yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
-        yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
-        gamesCount: scrapedChessPlayer.games_count,
-        age: scrapedChessPlayer.age,
-        birthday:
-          scrapedChessPlayer.birthday_unix !== null
-            ? new Date(scrapedChessPlayer.birthday_unix * 1000)
-                .toISOString()
-                .split("T")[0]
-            : null,
-        bestPosTitle: scrapedChessPlayer.best_pos_title,
-        bestRatingTitle: scrapedChessPlayer.best_rating_title,
-        live: scrapedChessPlayer.live,
-        lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
-        ratingHistory,
-      };
-    });
-
-    const dailyGames = await getDailyGames(env.SCRAPER_API_KEY);
-    const worldChampions = await getWorldChampions(env.SCRAPER_API_KEY);
-
-    const neonClient = neon(env.NEON_DATABASE_URL);
-    const db = drizzle(neonClient);
+        scrapedChessPlayer.country_name,
+      rating: Number(scrapedChessPlayer.rating),
+      livePos: scrapedChessPlayer.live_pos,
+      ratingDiff: scrapedChessPlayer.raitingDiff,
+      posChangeValue: scrapedChessPlayer.pos_change_value,
+      yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
+      yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
+      gamesCount: scrapedChessPlayer.games_count,
+      age: scrapedChessPlayer.age,
+      birthday:
+        scrapedChessPlayer.birthday_unix !== null
+          ? new Date(scrapedChessPlayer.birthday_unix * 1000)
+              .toISOString()
+              .split("T")[0]
+          : null,
+      bestPosTitle: scrapedChessPlayer.best_pos_title,
+      bestRatingTitle: scrapedChessPlayer.best_rating_title,
+      live: scrapedChessPlayer.live,
+      lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
+      ratingHistory: scrapedChessPlayer.rating_history_sparkline,
+    }));
 
     const updatedChessPlayers = await db
       .insert(dbChessPlayers)
@@ -470,39 +426,18 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
       .delete(dbChessPlayers)
       .where(notInArray(dbChessPlayers.fideId, fideIds));
 
+    console.log("Successfully scraped and saved chess players to database!");
+
     const chessPlayersToQueue = updatedChessPlayers.filter(
       (c) => c.wikipediaUrl === null,
     );
-
-    await db
-      .insert(dbDailyGames)
-      .values({
-        key: "men",
-        data: dailyGames,
-      })
-      .onConflictDoUpdate({
-        target: dbDailyGames.key,
-        set: {
-          data: sql`excluded.data`,
-        },
-      });
-
-    await db
-      .insert(dbWorldChampions)
-      .values({ key: "current", data: worldChampions })
-      .onConflictDoUpdate({
-        target: dbWorldChampions.key,
-        set: {
-          data: sql`excluded.data`,
-        },
-      });
 
     if (chessPlayersToQueue.length > 0) {
       console.log(
         `Queueing ${chessPlayersToQueue.length} chess player(s) for wikipedia data fetching...`,
       );
 
-      await env.CHESS_PLAYER_WIKI_DATA_QUEUE.sendBatch(
+      await chessPlayerWikiDataQueue.sendBatch(
         chessPlayersToQueue.map((chessPlayer) => ({
           body: {
             fideId: chessPlayer.fideId,
@@ -512,18 +447,117 @@ async function scrapeChessPlayers(env: CloudflareBindings) {
         })),
       );
     } else {
-      console.log("No chess players to queue");
+      console.log("No chess players to queue for wikipedia data fetching");
     }
-
-    console.log("Successfully scraped and saved chess players to database!");
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Cron job failed:", error.message);
+      console.error(
+        "Something went wrong scraping chess players:",
+        error.message,
+      );
     } else {
-      console.error("Cron job failed");
+      console.error("Something went wrong scraping chess players");
     }
   }
 }
+
+async function scrapeDailyGames(
+  scraperApikey: string,
+  db: NeonHttpDatabase<Record<string, never>> & {
+    $client: NeonQueryFunction<false, false>;
+  },
+) {
+  try {
+    console.log("Scraping daily games...");
+
+    const params = new URLSearchParams({
+      api_key: scraperApikey,
+      url: "https://2700chess.com/next/daily-games?gender=men",
+    });
+
+    const response = await fetch(`https://api.scraperapi.com?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    await db
+      .insert(dbDailyGames)
+      .values({
+        key: "men",
+        data,
+      })
+      .onConflictDoUpdate({
+        target: dbDailyGames.key,
+        set: {
+          data: sql`excluded.data`,
+        },
+      });
+
+    console.log("Successfully scraped and saved daily games to database!");
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        "Something went wrong scraping daily games:",
+        error.message,
+      );
+    } else {
+      console.error("Something went wrong scraping daily games");
+    }
+  }
+}
+
+async function scrapeWorldChampions(
+  scraperApikey: string,
+  db: NeonHttpDatabase<Record<string, never>> & {
+    $client: NeonQueryFunction<false, false>;
+  },
+) {
+  try {
+    console.log("Scraping world champions...");
+
+    const params = new URLSearchParams({
+      api_key: scraperApikey,
+      url: "https://2700chess.com/next/world-champions",
+    });
+
+    const response = await fetch(`https://api.scraperapi.com?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    await db
+      .insert(dbWorldChampions)
+      .values({ key: "current", data })
+      .onConflictDoUpdate({
+        target: dbWorldChampions.key,
+        set: {
+          data: sql`excluded.data`,
+        },
+      });
+
+    console.log("Successfully scraped and saved world champions to database!");
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        "Something went wrong scraping world champions:",
+        error.message,
+      );
+    } else {
+      console.error("Something went wrong scraping world champions");
+    }
+  }
+}
+
+// Urls that could be used in the future
+// "https://2700chess.com/next/events?gender=men&type=current"
+// "https://2700chess.com/next/events?gender=men&type=future"
+// "https://2700chess.com/next/events?gender=men&type=finished"
 
 export default {
   fetch: app.fetch,
@@ -535,8 +569,24 @@ export default {
     env: CloudflareBindings,
     ctx: ExecutionContext,
   ) {
-    // scrapeChessPlayers() uses 3 total requests
-    ctx.waitUntil(scrapeChessPlayers(env));
+    console.log("Starting cron job...");
+
+    const neonClient = neon(env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    // Uses 7 total requests
+    // Uses 3 total scraper api credits
+    await Promise.allSettled([
+      scrapeChessPlayers(
+        env.SCRAPER_API_KEY,
+        env.CHESS_PLAYER_WIKI_DATA_QUEUE,
+        db,
+      ),
+      scrapeDailyGames(env.SCRAPER_API_KEY, db),
+      scrapeWorldChampions(env.SCRAPER_API_KEY, db),
+    ]);
+
+    console.log("Cron job finished");
   },
 
   // Cloudflare limit of 50 async requests per queue batch

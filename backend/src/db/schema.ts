@@ -46,9 +46,23 @@ export const chessPlayers = pgTable("chess_players", {
 export const dailyGames = pgTable("daily_games", {
   key: text("key").primaryKey(),
   data: jsonb("data").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const worldChampions = pgTable("world_champions", {
   key: text("key").primaryKey(),
   data: jsonb("data").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
