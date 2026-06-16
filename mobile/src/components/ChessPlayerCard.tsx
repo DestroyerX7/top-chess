@@ -120,7 +120,7 @@ const ChessPlayerCard = React.memo(({ chessPlayer, onPress }: Props) => {
               </Text>
             )}
 
-            <View style={styles.row}>
+            <View style={styles.ratingRow}>
               <Text
                 style={{
                   color: colors.foreground,

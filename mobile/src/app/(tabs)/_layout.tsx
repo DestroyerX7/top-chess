@@ -2,7 +2,7 @@ import { colors } from "@/constants/colors";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { DynamicColorIOS } from "react-native";
 
-export default function RootLayout() {
+export default function TabsLayout() {
   return (
     <NativeTabs
       labelStyle={{
@@ -24,6 +24,20 @@ export default function RootLayout() {
           md={{ default: "home", selected: "home_filled" }}
         />
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="search">
+        <NativeTabs.Trigger.Icon
+          sf={{
+            default: "magnifyingglass",
+            selected: "magnifyingglass",
+          }}
+          md={{
+            default: "magnification_large",
+            selected: "magnification_large",
+          }}
+        />
+        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="live">

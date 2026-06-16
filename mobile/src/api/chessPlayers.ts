@@ -54,6 +54,23 @@ export type DaySchedule = Record<string, Tournament>;
 
 export type ChessSchedule = Record<string, DaySchedule>;
 
+export type SearchResult = {
+  name: string;
+  id: number;
+  federation: string;
+  photo?: {
+    small: string;
+    medium: string;
+    credit?: string;
+  };
+  standard?: number;
+  rapid?: number;
+  blitz?: number;
+  title?: string;
+  inactive?: boolean;
+  year?: number;
+};
+
 export async function getTopChessPlayers() {
   const response = await axios.get<ChessPlayer[]>(
     "https://top-chess.destroyerinc.workers.dev/get-top-chess-players",
@@ -73,6 +90,19 @@ export async function getChessPlayer(fideId: number | string) {
 export async function getDailyGames() {
   const response = await axios.get<ChessSchedule>(
     "https://top-chess.destroyerinc.workers.dev/get-daily-games",
+  );
+
+  return response.data;
+}
+
+export async function searchChessPlayer(searchInput: string) {
+  const response = await axios.get<SearchResult[]>(
+    "https://lichess.org/api/fide/player",
+    {
+      params: {
+        q: searchInput,
+      },
+    },
   );
 
   return response.data;
