@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
 
-export default function LiveLayout() {
+export default function EventsLayout() {
   return <Stack />;
 }

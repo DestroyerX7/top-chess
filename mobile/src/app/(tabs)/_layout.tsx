@@ -40,15 +40,15 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="live">
+      <NativeTabs.Trigger name="events">
         <NativeTabs.Trigger.Icon
           sf={{
-            default: "dot.radiowaves.left.and.right",
-            selected: "dot.radiowaves.left.and.right",
+            default: "calendar",
+            selected: "calendar",
           }}
-          md={{ default: "podcasts", selected: "podcasts" }}
+          md={{ default: "event", selected: "event" }}
         />
-        <NativeTabs.Trigger.Label>Live</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Events</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

@@ -27,12 +27,12 @@ export type ChessPlayer = {
   updatedAt: string;
 };
 
-export type Result = {
+type Result = {
   text: string;
   url: string;
 };
 
-export type Game = {
+type Game = {
   player_1: string;
   player_2: string;
   result: Result;
@@ -40,21 +40,21 @@ export type Game = {
   player_2_fide_id: number;
   player_1_display: string;
   player_2_display: string;
-  id?: number; // optional — not present on unplayed games
+  id?: number;
 };
 
-export type Round = Record<string, Game[]>;
+type Round = Record<string, Game[]>;
 
-export type Tournament = {
+type Tournament = {
   web_url: string;
   rounds: Round;
 };
 
-export type DaySchedule = Record<string, Tournament>;
+type DaySchedule = Record<string, Tournament>;
 
-export type ChessSchedule = Record<string, DaySchedule>;
+type ChessSchedule = Record<string, DaySchedule>;
 
-export type SearchResult = {
+export type LichessSearchResult = {
   name: string;
   id: number;
   federation: string;
@@ -69,6 +69,19 @@ export type SearchResult = {
   title?: string;
   inactive?: boolean;
   year?: number;
+};
+
+type WorldChampionCategories = {
+  blitz: number[];
+  girls: number[];
+  rapid: number[];
+  classic: number[];
+  juniors: number[];
+};
+
+type WorldChampions = {
+  men: WorldChampionCategories;
+  women: WorldChampionCategories;
 };
 
 export async function getTopChessPlayers() {
@@ -95,8 +108,16 @@ export async function getDailyGames() {
   return response.data;
 }
 
+export async function getWorldChampions() {
+  const response = await axios.get<WorldChampions>(
+    "https://top-chess.destroyerinc.workers.dev/get-world-champions",
+  );
+
+  return response.data;
+}
+
 export async function searchChessPlayer(searchInput: string) {
-  const response = await axios.get<SearchResult[]>(
+  const response = await axios.get<LichessSearchResult[]>(
     "https://lichess.org/api/fide/player",
     {
       params: {

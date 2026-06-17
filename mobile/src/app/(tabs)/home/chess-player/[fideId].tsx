@@ -1,15 +1,18 @@
-import { ChessPlayer, getChessPlayer } from "@/api/chessPlayers";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ExternalPathString,
   Link,
   Stack,
   useLocalSearchParams,
 } from "expo-router";
-import { Image, Text, ScrollView, View, StyleSheet } from "react-native";
+import { Text, ScrollView, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/utils/flags";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Image } from "expo-image";
+import { useChessPlayer, useWorldChampions } from "@/hooks/chess";
+import { spacings } from "@/constants/spacings";
+import { fontSizes } from "@/constants/fonts";
 
 function StatRow({
   label,
@@ -136,24 +139,14 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
 }
 
 export default function ChessPlayerPage() {
-  const { fideId } = useLocalSearchParams<{ fideId: string }>();
-  const queryClient = useQueryClient();
+  const localSearchParams = useLocalSearchParams<{ fideId: string }>();
+  const fideId = Number(localSearchParams.fideId);
 
-  const {
-    data: chessPlayer,
-    isPending,
-    error,
-  } = useQuery({
-    queryKey: ["chessPlayer", fideId],
-    queryFn: () => getChessPlayer(fideId),
-    staleTime: Infinity,
-    initialData: () =>
-      queryClient
-        .getQueryData<ChessPlayer[]>(["chessPlayers"])
-        ?.find((c) => c.fideId === Number(fideId)) ?? null,
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState(["chessPlayer", fideId])?.dataUpdatedAt,
-  });
+  const { data: chessPlayer, isPending, error } = useChessPlayer(fideId);
+
+  const { data: worldChampions } = useWorldChampions();
+
+  const classicWorldChampion = worldChampions?.men.classic[0];
 
   if (chessPlayer === null) {
     return;
@@ -170,11 +163,11 @@ export default function ChessPlayerPage() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: 16 }]}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
       >
-        {/* ── Hero image ── */}
+        {/* Hero image */}
         <View style={styles.heroContainer}>
           <Image
             source={{
@@ -182,6 +175,7 @@ export default function ChessPlayerPage() {
                 chessPlayer.imageUrl ??
                 "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg",
             }}
+            contentFit="contain"
             style={styles.heroImage}
           />
 
@@ -193,27 +187,34 @@ export default function ChessPlayerPage() {
               {chessPlayer.countryName} {flagStringToEmoji(chessPlayer.flag)}
             </Text>
 
-            {chessPlayer.live && (
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontWeight: "700",
-                  lineHeight: 39,
-                  fontSize: 26,
-                }}
-              >
-                🔴 Live
-              </Text>
-            )}
+            {classicWorldChampion !== undefined &&
+              classicWorldChampion === chessPlayer.fideId && (
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <Text style={styles.worldChampionText}>
+                    Current World Champion
+                  </Text>
+
+                  <MaterialCommunityIcons
+                    name="crown"
+                    size={24}
+                    color="gold"
+                    style={styles.textShadow}
+                  />
+                </View>
+              )}
+
+            {chessPlayer.live && <Text style={styles.liveText}>🔴 Live</Text>}
           </View>
         </View>
 
-        {/* ── Description ── */}
+        {/* Description */}
         {chessPlayer.description !== null && (
           <Text style={styles.description}>{chessPlayer.description}</Text>
         )}
 
-        {/* ── Chess stats ── */}
+        {/* Chess stats */}
         <SectionCard title="Chess Rating">
           <StatRow
             label="Live Rating"
@@ -230,7 +231,6 @@ export default function ChessPlayerPage() {
             label="World Rank"
             value={`#${chessPlayer.livePos}`}
             delta={chessPlayer.posChangeValue}
-            // deltaInvert
             positiveSymbol="▲"
             negativeSymbol="▼"
           />
@@ -239,7 +239,6 @@ export default function ChessPlayerPage() {
             label="Year Ranking Change"
             value={Math.abs(chessPlayer.yearAgoRankingChange)}
             delta={chessPlayer.yearAgoRankingChange}
-            // deltaInvert
             positiveSymbol="▲"
             negativeSymbol="▼"
           />
@@ -249,7 +248,7 @@ export default function ChessPlayerPage() {
           <StatRow label="FIDE ID" value={chessPlayer.fideId} />
         </SectionCard>
 
-        {/* ── About ── */}
+        {/* About */}
         <SectionCard title="About">
           <StatRow
             label="Country"
@@ -263,7 +262,7 @@ export default function ChessPlayerPage() {
           <StatRow label="Age" value={chessPlayer.age} />
         </SectionCard>
 
-        {/* ── Achievements ── */}
+        {/* Achievements */}
         <SectionCard title="Achievements">
           <Text style={styles.achievementText}>
             {chessPlayer.bestRatingTitle}
@@ -272,7 +271,7 @@ export default function ChessPlayerPage() {
           <Text style={styles.achievementText}>{chessPlayer.bestPosTitle}</Text>
         </SectionCard>
 
-        {/* ── Chart ── */}
+        {/* Chart */}
         {chessPlayer.ratingHistory !== null && (
           <RatingHistoryChart
             ratingHistory={[
@@ -282,7 +281,7 @@ export default function ChessPlayerPage() {
           />
         )}
 
-        {/* ── Bio ── */}
+        {/* Bio */}
         {chessPlayer.bio !== null && (
           <SectionCard title="Biography">
             {chessPlayer.bio.split("\n").map((text, index) => (
@@ -293,7 +292,7 @@ export default function ChessPlayerPage() {
           </SectionCard>
         )}
 
-        {/* ── Wikipedia link ── */}
+        {/* Wikipedia link */}
         {chessPlayer.wikipediaUrl !== null && (
           <Link
             href={chessPlayer.wikipediaUrl as ExternalPathString}
@@ -310,10 +309,8 @@ export default function ChessPlayerPage() {
 
 const styles = StyleSheet.create({
   scroll: {
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    gap: 16,
-    backgroundColor: colors.background,
+    padding: spacings.lg,
+    gap: spacings.lg,
   },
 
   // Hero
@@ -324,29 +321,43 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     aspectRatio: 1,
-    objectFit: "contain",
-    // backgroundColor: "#111",
   },
   heroBadge: {
-    padding: 16,
-    gap: 4,
+    padding: spacings.lg,
+    gap: spacings.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   heroName: {
     color: colors.cardForeground,
-    fontSize: 26,
+    fontSize: fontSizes["5xl"],
     fontWeight: "700",
   },
   heroCountry: {
     color: colors.mutedForeground,
-    fontSize: 15,
+    fontSize: fontSizes.lg,
+  },
+  liveText: {
+    color: colors.cardForeground,
+    fontWeight: "700",
+    lineHeight: 39,
+    fontSize: fontSizes["5xl"],
+  },
+  textShadow: {
+    textShadowColor: colors.background,
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 2,
+  },
+  worldChampionText: {
+    color: colors.mutedForeground,
+    fontWeight: "700",
+    fontStyle: "italic",
   },
 
   // Description
   description: {
     color: colors.mutedForeground,
-    fontSize: 16,
+    fontSize: fontSizes.lg,
     lineHeight: 24,
     fontStyle: "italic",
   },
@@ -357,7 +368,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    padding: spacings.lg,
     gap: 12,
   },
   cardTitle: {
@@ -380,28 +391,25 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: colors.mutedForeground,
-    fontSize: 14,
     flex: 1,
   },
   statRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacings.md,
   },
   statValue: {
     color: colors.cardForeground,
-    fontSize: 14,
     fontWeight: "600",
   },
   statDelta: {
-    fontSize: 12,
+    fontSize: fontSizes.sm,
     fontWeight: "600",
   },
 
   // Achievements
   achievementText: {
     color: colors.mutedForeground,
-    fontSize: 14,
     lineHeight: 20,
   },
 
@@ -411,7 +419,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    padding: spacings.lg,
     gap: 12,
     overflow: "hidden",
   },
@@ -419,16 +427,14 @@ const styles = StyleSheet.create({
   // Bio
   bioText: {
     color: colors.foreground,
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: fontSizes.lg,
+    lineHeight: 24, // This is causing text in the bio to get cutoff, idk why
   },
 
   // Wikipedia
   wikiLink: {
     color: colors.primary,
-    fontSize: 15,
+    fontSize: fontSizes.lg,
     fontWeight: "600",
-    // paddingVertical: 4,
-    // textDecorationLine: "none",
   },
 });

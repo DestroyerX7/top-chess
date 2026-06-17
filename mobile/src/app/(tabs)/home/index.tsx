@@ -1,13 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/colors";
 import TopChessPlayers from "@/components/TopChessPlayers";
-import { ChessPlayer, getTopChessPlayers } from "@/api/chessPlayers";
+import { ChessPlayer } from "@/api/chess";
 import { router, Stack } from "expo-router";
 import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
 } from "@/components/ChessPlayerCard";
+import { useChessPlayers, useWorldChampions } from "@/hooks/chess";
+import { fontSizes } from "@/constants/fonts";
+import { spacings } from "@/constants/spacings";
+
+const fideLogoUrl =
+  "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
+
+const skeletonData = Array(10).fill(null);
 
 export default function Home() {
   const {
@@ -17,59 +24,91 @@ export default function Home() {
     isFetching,
     refetch,
     isStale,
-  } = useQuery({
-    queryKey: ["chessPlayers"],
-    queryFn: getTopChessPlayers,
-    staleTime: 1000 * 60 * 10,
-  });
+  } = useChessPlayers();
+
+  const { data: worldChampions } = useWorldChampions();
+  const classicWorldChampion = worldChampions?.men.classic[0];
 
   const [searchInput, setSearchInput] = useState("");
 
-  const fideLogoUrl =
-    "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
-
   useEffect(() => {
-    if (chessPlayers !== undefined) {
-      const widgetChessPlayers = chessPlayers
-        .slice(0, 25)
-        .map((chessPlayer) => ({
-          name: chessPlayer.name,
-          rating: chessPlayer.rating,
-          livePos: chessPlayer.livePos,
-          imageUrl: chessPlayer.imageUrl
-            ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}` /*`https://top-chess.destroyerinc.workers.dev/image-proxy?url=${chessPlayer.imageUrl}`*/
-            : fideLogoUrl,
-        }));
-
-      TopChessPlayers.updateSnapshot({
-        widgetChessPlayers,
-      });
+    if (chessPlayers === undefined) {
+      return;
     }
+
+    const widgetChessPlayers = chessPlayers.slice(0, 25).map((chessPlayer) => ({
+      name: chessPlayer.name,
+      rating: chessPlayer.rating,
+      livePos: chessPlayer.livePos,
+      imageUrl:
+        chessPlayer.imageUrl !== null
+          ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}`
+          : fideLogoUrl,
+    }));
+
+    TopChessPlayers.updateSnapshot({
+      widgetChessPlayers,
+    });
   }, [chessPlayers]);
 
-  const handlePress = useCallback(
-    (fideId: number) => {
-      router.push({
-        pathname: "/home/chess-player/[fideId]",
-        params: { fideId },
-      });
-    },
-    [router],
-  );
+  const handlePress = useCallback((fideId: number) => {
+    router.push({
+      pathname: "/home/chess-player/[fideId]",
+      params: { fideId },
+    });
+  }, []);
 
   const renderItem = useCallback(
     ({ item: chessPlayer }: { item: ChessPlayer }) => (
-      <ChessPlayerCard chessPlayer={chessPlayer} onPress={handlePress} />
+      <ChessPlayerCard
+        style={styles.chessPlayerCardContainer}
+        chessPlayer={chessPlayer}
+        isWorldChampion={
+          classicWorldChampion !== undefined &&
+          classicWorldChampion === chessPlayer.fideId
+        }
+        onPress={handlePress}
+      />
     ),
-    [handlePress],
+    [handlePress, classicWorldChampion],
   );
 
-  const shownChessPlayers =
-    searchInput.length < 1
-      ? (chessPlayers ?? [])
-      : (chessPlayers?.filter((c) =>
-          c.name.toLowerCase().includes(searchInput.toLowerCase()),
-        ) ?? []);
+  const renderSkeleton = useCallback(
+    () => <ChessPlayerCardSkeleton style={styles.chessPlayerCardContainer} />,
+    [],
+  );
+
+  const shownChessPlayers = useMemo(() => {
+    if (!chessPlayers) {
+      return [];
+    }
+
+    const trimmedSearchInput = searchInput.trim().toLowerCase();
+
+    if (trimmedSearchInput.length < 1) {
+      return chessPlayers;
+    }
+
+    return chessPlayers.filter((c) =>
+      c.name.toLowerCase().includes(trimmedSearchInput),
+    );
+  }, [chessPlayers, searchInput]);
+
+  const listEmptyComponent = useMemo(
+    () =>
+      error === null ? (
+        <View style={styles.container}>
+          <Text style={styles.emptyListText}>No chess players found</Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <Text style={styles.emptyListText}>
+            Something went wrong, please refresh to try again
+          </Text>
+        </View>
+      ),
+    [error],
+  );
 
   return (
     <>
@@ -88,15 +127,15 @@ export default function Home() {
 
       <FlatList
         contentInsetAdjustmentBehavior="automatic"
-        data={isPending ? Array(15).fill(null) : shownChessPlayers}
+        data={isPending ? skeletonData : shownChessPlayers}
         numColumns={2}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 8 }}
+        contentContainerStyle={styles.container}
         keyExtractor={(item, index) =>
           isPending ? String(index) : String(item.fideId)
         }
-        renderItem={isPending ? () => <ChessPlayerCardSkeleton /> : renderItem}
-        refreshing={isFetching}
+        renderItem={isPending ? renderSkeleton : renderItem}
+        refreshing={!isPending && isFetching}
         onRefresh={() => {
           if (!isStale) {
             return;
@@ -104,33 +143,7 @@ export default function Home() {
 
           refetch();
         }}
-        ListEmptyComponent={
-          error === null ? (
-            <View style={{ padding: 8 }}>
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontSize: 16,
-                  fontWeight: "700",
-                }}
-              >
-                No chess players found
-              </Text>
-            </View>
-          ) : (
-            <View style={{ padding: 8 }}>
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontSize: 16,
-                  fontWeight: "700",
-                }}
-              >
-                Something went wrong, plaese rerfesh to try again
-              </Text>
-            </View>
-          )
-        }
+        ListEmptyComponent={listEmptyComponent}
       />
     </>
   );
@@ -138,6 +151,17 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   container: {
+    padding: spacings.md,
+  },
+  emptyListText: {
+    color: colors.foreground,
+    fontSize: fontSizes.lg,
+    fontWeight: "700",
+  },
+  chessPlayerCardContainer: {
     flex: 1,
+    aspectRatio: 1,
+    padding: spacings.md,
+    maxWidth: "50%",
   },
 });

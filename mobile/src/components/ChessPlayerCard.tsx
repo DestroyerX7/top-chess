@@ -1,13 +1,14 @@
-import { ChessPlayer } from "@/api/chessPlayers";
+import { ChessPlayer } from "@/api/chess";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/utils/flags";
 import React, { useCallback } from "react";
 import {
-  ImageBackground,
   Pressable,
   View,
   Text,
   StyleSheet,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -15,51 +16,58 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Image } from "expo-image";
+import { spacings } from "@/constants/spacings";
 
 type Props = {
+  style?: StyleProp<ViewStyle>;
   chessPlayer: ChessPlayer;
+  isWorldChampion?: boolean;
   onPress: (fideId: number) => void;
 };
 
 const fideLogoUrl =
   "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
 
-const ChessPlayerCard = React.memo(({ chessPlayer, onPress }: Props) => {
-  const handleCardPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress(chessPlayer.fideId);
-  }, [onPress, chessPlayer.fideId]);
+const ChessPlayerCard = React.memo(
+  ({ style, chessPlayer, isWorldChampion = false, onPress }: Props) => {
+    const handleCardPress = useCallback(() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPress(chessPlayer.fideId);
+    }, [onPress, chessPlayer.fideId]);
 
-  const scale = useSharedValue(1);
+    const scale = useSharedValue(1);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+    }));
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.95);
-  };
+    const handlePressIn = () => {
+      scale.value = withSpring(0.95);
+    };
 
-  const handlePressOut = () => {
-    scale.value = withSpring(1);
-  };
+    const handlePressOut = () => {
+      scale.value = withSpring(1);
+    };
 
-  return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      <Pressable
-        onPress={handleCardPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{ flex: 1 }}
-      >
-        <ImageBackground
-          source={{
-            uri: chessPlayer.imageUrl ?? fideLogoUrl,
-          }}
-          style={styles.imageBackground}
-          imageStyle={styles.imageStyle}
-          key={chessPlayer.fideId}
+    return (
+      <Animated.View style={[style, animatedStyle]}>
+        <Pressable
+          onPress={handleCardPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={styles.pressable}
         >
+          <Image
+            source={{ uri: chessPlayer.imageUrl ?? fideLogoUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            // contentPosition="top center"
+            placeholder={{ blurhash: "LGF5?xYk^6#M@-5c,1J5@[or[Q6." }} // optional
+            transition={300} // crossfade duration in ms when real image loads
+          />
+
           <View style={styles.row}>
             <View style={styles.column}>
               <Text
@@ -105,6 +113,19 @@ const ChessPlayerCard = React.memo(({ chessPlayer, onPress }: Props) => {
           </View>
 
           <View style={styles.bottom}>
+            {isWorldChampion && (
+              <MaterialCommunityIcons
+                name="crown"
+                size={32}
+                color="gold"
+                style={{
+                  textShadowColor: colors.background,
+                  textShadowOffset: { width: 0, height: 2 },
+                  textShadowRadius: 2,
+                }}
+              />
+            )}
+
             {chessPlayer.live && (
               <Text
                 style={{
@@ -163,15 +184,19 @@ const ChessPlayerCard = React.memo(({ chessPlayer, onPress }: Props) => {
               {chessPlayer.name}
             </Text>
           </View>
-        </ImageBackground>
-      </Pressable>
-    </Animated.View>
-  );
-});
+        </Pressable>
+      </Animated.View>
+    );
+  },
+);
 
-export function ChessPlayerCardSkeleton() {
+export function ChessPlayerCardSkeleton({
+  style,
+}: {
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
-    <View style={styles.container}>
+    <View style={style}>
       <View
         style={{
           flex: 1,
@@ -230,19 +255,12 @@ export function ChessPlayerCardSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  pressable: {
     flex: 1,
-    aspectRatio: 1,
-    padding: 8,
-    maxWidth: "50%",
-  },
-  imageBackground: {
-    padding: 8,
-    justifyContent: "space-between",
-    flex: 1,
-  },
-  imageStyle: {
+    overflow: "hidden",
     borderRadius: 16,
+    padding: spacings.md,
+    justifyContent: "space-between",
   },
   row: {
     flexDirection: "row",
@@ -250,11 +268,11 @@ const styles = StyleSheet.create({
   },
   column: {
     flexDirection: "column",
-    gap: 4,
+    gap: spacings.sm,
   },
   ratingRow: {
     flexDirection: "row",
-    gap: 4,
+    gap: spacings.sm,
   },
   bottom: {
     justifyContent: "space-between",
