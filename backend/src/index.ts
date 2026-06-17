@@ -564,27 +564,30 @@ export default {
 
   // Cloudflare limit of 50 async requests in a scheduled cron job
   // e.g await getData("https://url.com")
+  // ScraperAPI limit of 1000 credits per month
+  // Currently uses 899 scraper api credits per month
   async scheduled(
     controller: ScheduledController,
     env: CloudflareBindings,
     ctx: ExecutionContext,
   ) {
-    console.log("Starting cron job...");
-
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
 
-    // Uses 7 total requests
-    // Uses 3 total scraper api credits
-    await Promise.allSettled([
-      scrapeChessPlayers(
+    if (controller.cron === "0 * * * *") {
+      // Uses 3 requests and 1 scraper api credit
+      await scrapeChessPlayers(
         env.SCRAPER_API_KEY,
         env.CHESS_PLAYER_WIKI_DATA_QUEUE,
         db,
-      ),
-      scrapeDailyGames(env.SCRAPER_API_KEY, db),
-      scrapeWorldChampions(env.SCRAPER_API_KEY, db),
-    ]);
+      );
+    } else if (controller.cron === "0 */6 * * *") {
+      // Uses 2 requests and 1 scraper api credit
+      await scrapeDailyGames(env.SCRAPER_API_KEY, db);
+    } else if (controller.cron === "0 0 * * *") {
+      // Uses 2 requests and 1 scraper api credit
+      await scrapeWorldChampions(env.SCRAPER_API_KEY, db);
+    }
 
     console.log("Cron job finished");
   },
