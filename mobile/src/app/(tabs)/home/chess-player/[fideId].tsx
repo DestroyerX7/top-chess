@@ -12,25 +12,21 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
 import { useChessPlayer, useWorldChampions } from "@/hooks/chess";
 import { spacings } from "@/constants/spacings";
-import { fontSizes } from "@/constants/fonts";
+import { fontSizes, lineHeights } from "@/constants/fonts";
 
 function StatRow({
   label,
   value,
   delta,
-  deltaInvert = false,
   positiveSymbol = "+",
   negativeSymbol = "-",
 }: {
   label: string;
   value: string | number;
   delta?: number;
-  deltaInvert?: boolean; // for rankings: lower is better
   positiveSymbol?: string;
   negativeSymbol?: string;
 }) {
-  const positive = deltaInvert ? (delta ?? 0) < 0 : (delta ?? 0) > 0;
-
   return (
     <View style={styles.statRow}>
       <Text style={styles.statLabel}>{label}</Text>
@@ -42,10 +38,10 @@ function StatRow({
           <Text
             style={[
               styles.statDelta,
-              { color: positive ? colors.primary : colors.destructive },
+              { color: delta > 0 ? colors.primary : colors.destructive },
             ]}
           >
-            {positive ? positiveSymbol : negativeSymbol} {Math.abs(delta)}
+            {delta > 0 ? positiveSymbol : negativeSymbol} {Math.abs(delta)}
           </Text>
         )}
       </View>
@@ -66,7 +62,7 @@ function SectionCard({
 
       <View style={styles.cardDivider} />
 
-      <View style={{ gap: 10 }}>{children}</View>
+      {children}
     </View>
   );
 }
@@ -115,24 +111,28 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
         color={colors.primary}
         thickness={2}
         hideDataPoints
-        dataPointsColor={colors.primary}
         areaChart
         startFillColor={colors.primary}
         endFillColor={colors.background}
-        startOpacity={0.35}
+        startOpacity={0.5}
         dashWidth={0}
         yAxisLabelTexts={yAxisLabelTexts}
-        yAxisTextStyle={{ color: colors.mutedForeground, fontSize: 11 }}
-        xAxisLabelTextStyle={{ color: colors.mutedForeground, fontSize: 11 }}
-        isAnimated
+        yAxisTextStyle={{
+          color: colors.mutedForeground,
+          fontSize: fontSizes.sm,
+          lineHeight: lineHeights.sm,
+        }}
+        xAxisLabelTextStyle={{
+          color: colors.mutedForeground,
+          fontSize: fontSizes.sm,
+          lineHeight: lineHeights.sm,
+        }}
+        yAxisColor={colors.border}
+        xAxisColor={colors.border}
         scrollToEnd
         adjustToWidth
         noOfSections={noOfSections}
         stepValue={stepVal}
-        backgroundColor="transparent"
-        yAxisColor={colors.border}
-        xAxisColor={colors.border}
-        rulesColor={colors.border}
       />
     </View>
   );
@@ -189,9 +189,7 @@ export default function ChessPlayerPage() {
 
             {classicWorldChampion !== undefined &&
               classicWorldChampion === chessPlayer.fideId && (
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-                >
+                <View style={styles.worldChampionContainer}>
                   <Text style={styles.worldChampionText}>
                     Current World Champion
                   </Text>
@@ -284,11 +282,14 @@ export default function ChessPlayerPage() {
         {/* Bio */}
         {chessPlayer.bio !== null && (
           <SectionCard title="Biography">
-            {chessPlayer.bio.split("\n").map((text, index) => (
-              <Text key={index} style={styles.bioText}>
-                {text}
-              </Text>
-            ))}
+            {chessPlayer.bio
+              .split("\n")
+              .filter((s) => s.length > 0)
+              .map((text, index) => (
+                <Text key={index} style={styles.bioText}>
+                  {text}
+                </Text>
+              ))}
           </SectionCard>
         )}
 
@@ -331,22 +332,29 @@ const styles = StyleSheet.create({
   heroName: {
     color: colors.cardForeground,
     fontSize: fontSizes["5xl"],
+    lineHeight: lineHeights["5xl"],
     fontWeight: "700",
   },
   heroCountry: {
     color: colors.mutedForeground,
     fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
   },
   liveText: {
     color: colors.cardForeground,
     fontWeight: "700",
-    lineHeight: 39,
     fontSize: fontSizes["5xl"],
+    lineHeight: lineHeights["5xl"],
   },
   textShadow: {
     textShadowColor: colors.background,
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 2,
+  },
+  worldChampionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacings.sm,
   },
   worldChampionText: {
     color: colors.mutedForeground,
@@ -358,7 +366,7 @@ const styles = StyleSheet.create({
   description: {
     color: colors.mutedForeground,
     fontSize: fontSizes.lg,
-    lineHeight: 24,
+    lineHeight: lineHeights.lg,
     fontStyle: "italic",
   },
 
@@ -369,14 +377,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacings.lg,
-    gap: 12,
+    gap: spacings.lg,
   },
   cardTitle: {
     color: colors.primary,
-    fontSize: 11,
+    textTransform: "uppercase",
     fontWeight: "700",
     letterSpacing: 1.5,
-    textTransform: "uppercase",
+    fontSize: fontSizes.sm,
+    lineHeight: lineHeights.sm,
   },
   cardDivider: {
     height: 1,
@@ -404,13 +413,14 @@ const styles = StyleSheet.create({
   },
   statDelta: {
     fontSize: fontSizes.sm,
+    lineHeight: lineHeights.sm,
     fontWeight: "600",
   },
 
   // Achievements
   achievementText: {
     color: colors.mutedForeground,
-    lineHeight: 20,
+    lineHeight: lineHeights.md,
   },
 
   // Chart
@@ -420,7 +430,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacings.lg,
-    gap: 12,
+    gap: spacings.lg,
     overflow: "hidden",
   },
 
@@ -428,7 +438,7 @@ const styles = StyleSheet.create({
   bioText: {
     color: colors.foreground,
     fontSize: fontSizes.lg,
-    lineHeight: 24, // This is causing text in the bio to get cutoff, idk why
+    lineHeight: lineHeights.lg,
   },
 
   // Wikipedia

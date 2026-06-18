@@ -1,5 +1,5 @@
 import { colors } from "@/constants/colors";
-import { fontSizes } from "@/constants/fonts";
+import { fontSizes, lineHeights } from "@/constants/fonts";
 import { spacings } from "@/constants/spacings";
 import { useDailyGames } from "@/hooks/chess";
 import { Stack } from "expo-router";
@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     marginBottom: spacings.lg,
     fontSize: fontSizes.xl,
+    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   dayScheduleContainer: {
@@ -116,6 +117,7 @@ const styles = StyleSheet.create({
   tounamentName: {
     color: colors.primary,
     fontSize: fontSizes.xl,
+    lineHeight: lineHeights.xl,
     fontWeight: "700",
     marginBottom: spacings.sm,
   },
@@ -123,6 +125,7 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     fontStyle: "italic",
     fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
     fontWeight: "600",
   },
   gameContainer: { gap: spacings.lg },

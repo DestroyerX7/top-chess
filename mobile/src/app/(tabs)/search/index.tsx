@@ -13,7 +13,7 @@ import { Image } from "expo-image";
 import ChessPlayerCard from "@/components/ChessPlayerCard";
 import { useChessPlayers } from "@/hooks/chess";
 import { spacings } from "@/constants/spacings";
-import { fontSizes } from "@/constants/fonts";
+import { fontSizes, lineHeights } from "@/constants/fonts";
 
 type Segment = {
   text: string;
@@ -413,6 +413,7 @@ const styles = StyleSheet.create({
   emptySearchResultsText: {
     color: colors.foreground,
     fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   searchResultCard: {
@@ -435,9 +436,14 @@ const styles = StyleSheet.create({
   searchResultName: {
     color: colors.cardForeground,
     fontSize: fontSizes.xl,
+    lineHeight: lineHeights.xl,
     fontWeight: "700",
   },
-  searchResultCountryText: { color: colors.foreground, fontSize: fontSizes.lg },
+  searchResultCountryText: {
+    color: colors.foreground,
+    fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
+  },
   photoCreditText: {
     color: colors.mutedForeground,
     fontStyle: "italic",
@@ -462,6 +468,7 @@ const styles = StyleSheet.create({
   ratingText: {
     color: colors.cardForeground,
     fontSize: fontSizes.xl,
+    lineHeight: lineHeights.xl,
     fontWeight: "700",
   },
   chessPlayerCardContainer: {
@@ -476,5 +483,9 @@ const styles = StyleSheet.create({
     gap: spacings.sm,
   },
   quoteSegmentText: { color: colors.mutedForeground, fontStyle: "italic" },
-  quoteAuthorText: { color: colors.mutedForeground, fontSize: fontSizes.sm },
+  quoteAuthorText: {
+    color: colors.mutedForeground,
+    fontSize: fontSizes.sm,
+    lineHeight: lineHeights.sm,
+  },
 });

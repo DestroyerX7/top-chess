@@ -8,7 +8,7 @@ import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
 } from "@/components/ChessPlayerCard";
 import { useChessPlayers, useWorldChampions } from "@/hooks/chess";
-import { fontSizes } from "@/constants/fonts";
+import { fontSizes, lineHeights } from "@/constants/fonts";
 import { spacings } from "@/constants/spacings";
 
 const fideLogoUrl =
@@ -156,6 +156,7 @@ const styles = StyleSheet.create({
   emptyListText: {
     color: colors.foreground,
     fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   chessPlayerCardContainer: {
