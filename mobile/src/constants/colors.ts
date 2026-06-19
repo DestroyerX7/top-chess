@@ -15,4 +15,4 @@ export const colors = {
   input: "#404040",
   destructive: "#ff2020",
   destructiveForeground: "#fff",
-};
+} as const;

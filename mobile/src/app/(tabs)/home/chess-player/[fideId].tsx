@@ -4,7 +4,7 @@ import {
   Stack,
   useLocalSearchParams,
 } from "expo-router";
-import { Text, ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/utils/flags";
@@ -13,6 +13,8 @@ import { Image } from "expo-image";
 import { useChessPlayer, useWorldChampions } from "@/hooks/chess";
 import { spacings } from "@/constants/spacings";
 import { fontSizes, lineHeights } from "@/constants/fonts";
+import Text from "@/components/Text";
+import { borderRadius } from "@/constants/borders";
 
 function StatRow({
   label,
@@ -41,7 +43,8 @@ function StatRow({
               { color: delta > 0 ? colors.primary : colors.destructive },
             ]}
           >
-            {delta > 0 ? positiveSymbol : negativeSymbol} {Math.abs(delta)}
+            {delta > 0 ? positiveSymbol : negativeSymbol}
+            {Math.abs(delta)}
           </Text>
         )}
       </View>
@@ -58,7 +61,9 @@ function SectionCard({
 }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>{title}</Text>
+      <Text size="sm" style={styles.cardTitle}>
+        {title}
+      </Text>
 
       <View style={styles.cardDivider} />
 
@@ -102,7 +107,9 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
 
   return (
     <View style={styles.chartContainer}>
-      <Text style={styles.cardTitle}>Rating History</Text>
+      <Text size="sm" style={styles.cardTitle}>
+        Rating History
+      </Text>
 
       <View style={styles.cardDivider} />
 
@@ -181,16 +188,18 @@ export default function ChessPlayerPage() {
 
           {/* Gradient overlay name badge */}
           <View style={styles.heroBadge}>
-            <Text style={styles.heroName}>{chessPlayer.name}</Text>
+            <Text size="4xl" style={styles.heroName}>
+              {chessPlayer.name}
+            </Text>
 
-            <Text style={styles.heroCountry}>
+            <Text size="lg" style={styles.heroCountry}>
               {chessPlayer.countryName} {flagStringToEmoji(chessPlayer.flag)}
             </Text>
 
             {classicWorldChampion !== undefined &&
               classicWorldChampion === chessPlayer.fideId && (
                 <View style={styles.worldChampionContainer}>
-                  <Text style={styles.worldChampionText}>
+                  <Text size="lg" style={styles.worldChampionText}>
                     Current World Champion
                   </Text>
 
@@ -203,13 +212,19 @@ export default function ChessPlayerPage() {
                 </View>
               )}
 
-            {chessPlayer.live && <Text style={styles.liveText}>🔴 Live</Text>}
+            {chessPlayer.live && (
+              <Text size="4xl" style={styles.liveText}>
+                🔴 Live
+              </Text>
+            )}
           </View>
         </View>
 
         {/* Description */}
         {chessPlayer.description !== null && (
-          <Text style={styles.description}>{chessPlayer.description}</Text>
+          <Text size="lg" style={styles.description}>
+            {chessPlayer.description}
+          </Text>
         )}
 
         {/* Chess stats */}
@@ -222,7 +237,12 @@ export default function ChessPlayerPage() {
 
           <StatRow
             label="Year Rating Change"
-            value={`${chessPlayer.yearAgoRatingChange > 0 ? "+" : ""}${chessPlayer.yearAgoRatingChange}`}
+            value={
+              chessPlayer.yearAgoRatingChange === 0
+                ? chessPlayer.yearAgoRatingChange
+                : ""
+            }
+            delta={chessPlayer.yearAgoRatingChange}
           />
 
           <StatRow
@@ -235,7 +255,11 @@ export default function ChessPlayerPage() {
 
           <StatRow
             label="Year Ranking Change"
-            value={Math.abs(chessPlayer.yearAgoRankingChange)}
+            value={
+              chessPlayer.yearAgoRankingChange === 0
+                ? chessPlayer.yearAgoRankingChange
+                : ""
+            }
             delta={chessPlayer.yearAgoRankingChange}
             positiveSymbol="▲"
             negativeSymbol="▼"
@@ -286,7 +310,7 @@ export default function ChessPlayerPage() {
               .split("\n")
               .filter((s) => s.length > 0)
               .map((text, index) => (
-                <Text key={index} style={styles.bioText}>
+                <Text size="lg" key={index} style={styles.bioText}>
                   {text}
                 </Text>
               ))}
@@ -316,7 +340,7 @@ const styles = StyleSheet.create({
 
   // Hero
   heroContainer: {
-    borderRadius: 16,
+    borderRadius: borderRadius.lg,
     overflow: "hidden",
     backgroundColor: colors.card,
   },
@@ -331,20 +355,14 @@ const styles = StyleSheet.create({
   },
   heroName: {
     color: colors.cardForeground,
-    fontSize: fontSizes["5xl"],
-    lineHeight: lineHeights["5xl"],
     fontWeight: "700",
   },
   heroCountry: {
     color: colors.mutedForeground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
   },
   liveText: {
     color: colors.cardForeground,
     fontWeight: "700",
-    fontSize: fontSizes["5xl"],
-    lineHeight: lineHeights["5xl"],
   },
   textShadow: {
     textShadowColor: colors.background,
@@ -365,27 +383,23 @@ const styles = StyleSheet.create({
   // Description
   description: {
     color: colors.mutedForeground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
     fontStyle: "italic",
   },
 
   // Cards
   card: {
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacings.lg,
-    gap: spacings.lg,
+    gap: spacings.md,
   },
   cardTitle: {
     color: colors.primary,
     textTransform: "uppercase",
     fontWeight: "700",
     letterSpacing: 1.5,
-    fontSize: fontSizes.sm,
-    lineHeight: lineHeights.sm,
   },
   cardDivider: {
     height: 1,
@@ -412,39 +426,33 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   statDelta: {
-    fontSize: fontSizes.sm,
-    lineHeight: lineHeights.sm,
     fontWeight: "600",
   },
 
   // Achievements
   achievementText: {
     color: colors.mutedForeground,
-    lineHeight: lineHeights.md,
   },
 
   // Chart
   chartContainer: {
     backgroundColor: colors.card,
-    borderRadius: 14,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacings.lg,
-    gap: spacings.lg,
+    gap: spacings.md,
     overflow: "hidden",
   },
 
   // Bio
   bioText: {
     color: colors.foreground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
   },
 
   // Wikipedia
   wikiLink: {
     color: colors.primary,
-    fontSize: fontSizes.lg,
     fontWeight: "600",
   },
 });

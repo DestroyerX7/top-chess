@@ -5,7 +5,6 @@ import React, { useCallback } from "react";
 import {
   Pressable,
   View,
-  Text,
   StyleSheet,
   StyleProp,
   ViewStyle,
@@ -19,6 +18,9 @@ import Animated, {
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
 import { spacings } from "@/constants/spacings";
+import Text from "@/components/Text";
+import { lineHeights } from "@/constants/fonts";
+import { borderRadius } from "@/constants/borders";
 
 type Props = {
   style?: StyleProp<ViewStyle>;
@@ -72,7 +74,6 @@ const ChessPlayerCard = React.memo(
             <View style={styles.column}>
               <Text
                 style={{
-                  color: colors.foreground,
                   fontWeight: "700",
                   textShadowColor: colors.background,
                   textShadowOffset: { width: 0, height: 2 },
@@ -101,8 +102,9 @@ const ChessPlayerCard = React.memo(
             </View>
 
             <Text
+              size="8xl"
+              noLineHeight
               style={{
-                fontSize: 32,
                 textShadowColor: colors.background,
                 textShadowOffset: { width: 0, height: 2 },
                 textShadowRadius: 2,
@@ -129,12 +131,11 @@ const ChessPlayerCard = React.memo(
             {chessPlayer.live && (
               <Text
                 style={{
-                  color: colors.foreground,
                   fontWeight: "700",
                   textShadowColor: colors.background,
                   textShadowOffset: { width: 0, height: 2 },
                   textShadowRadius: 2,
-                  lineHeight: 24,
+                  lineHeight: lineHeights.xl,
                 }}
               >
                 🔴 Live
@@ -144,7 +145,6 @@ const ChessPlayerCard = React.memo(
             <View style={styles.ratingRow}>
               <Text
                 style={{
-                  color: colors.foreground,
                   fontWeight: "700",
                   textShadowColor: colors.background,
                   textShadowOffset: { width: 0, height: 2 },
@@ -174,7 +174,6 @@ const ChessPlayerCard = React.memo(
 
             <Text
               style={{
-                color: colors.foreground,
                 fontWeight: "700",
                 textShadowColor: colors.background,
                 textShadowOffset: { width: 0, height: 2 },
@@ -200,9 +199,9 @@ export function ChessPlayerCardSkeleton({
       <View
         style={{
           flex: 1,
-          borderRadius: 16,
+          borderRadius: borderRadius.lg,
           backgroundColor: colors.card,
-          padding: 16,
+          padding: spacings.lg,
           justifyContent: "space-between",
         }}
       >
@@ -217,7 +216,7 @@ export function ChessPlayerCardSkeleton({
               height: 64,
               width: 64,
               backgroundColor: colors.secondary,
-              borderRadius: 8,
+              borderRadius: borderRadius.sm,
             }}
           />
 
@@ -226,18 +225,18 @@ export function ChessPlayerCardSkeleton({
               height: 32,
               width: 32,
               backgroundColor: colors.secondary,
-              borderRadius: 8,
+              borderRadius: borderRadius.sm,
             }}
           />
         </View>
 
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: spacings.md }}>
           <View
             style={{
               height: 32,
               width: "75%",
               backgroundColor: colors.secondary,
-              borderRadius: 8,
+              borderRadius: borderRadius.sm,
             }}
           />
 
@@ -245,7 +244,7 @@ export function ChessPlayerCardSkeleton({
             style={{
               height: 32,
               backgroundColor: colors.secondary,
-              borderRadius: 8,
+              borderRadius: borderRadius.sm,
             }}
           />
         </View>
@@ -258,7 +257,7 @@ const styles = StyleSheet.create({
   pressable: {
     flex: 1,
     overflow: "hidden",
-    borderRadius: 16,
+    borderRadius: borderRadius.lg,
     padding: spacings.md,
     justifyContent: "space-between",
   },
@@ -268,7 +267,6 @@ const styles = StyleSheet.create({
   },
   column: {
     flexDirection: "column",
-    gap: spacings.sm,
   },
   ratingRow: {
     flexDirection: "row",

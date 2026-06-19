@@ -1,9 +1,10 @@
 import { colors } from "@/constants/colors";
-import { fontSizes, lineHeights } from "@/constants/fonts";
 import { spacings } from "@/constants/spacings";
 import { useDailyGames } from "@/hooks/chess";
 import { Stack } from "expo-router";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
+import Text from "@/components/Text";
+import { borderRadius } from "@/constants/borders";
 
 export default function Events() {
   const { data: dailyGames } = useDailyGames();
@@ -30,26 +31,26 @@ export default function Events() {
           .reverse()
           .map(([date, daySchedule]) => (
             <View key={date}>
-              <Text style={styles.date}>{date}</Text>
+              <Text size="xl" style={styles.date}>
+                {date}
+              </Text>
 
               <View style={styles.dayScheduleContainer}>
                 {Object.entries(daySchedule).map(
                   ([tournamentName, tournament]) => (
                     <View key={tournamentName} style={styles.tounamentCard}>
-                      <Text style={styles.tounamentName}>{tournamentName}</Text>
+                      <Text size="xl" style={styles.tounamentName}>
+                        {tournamentName}
+                      </Text>
 
                       {Object.entries(tournament.rounds).map(
                         ([roundName, games]) => (
                           <View key={roundName}>
-                            <Text style={styles.roundName}>{roundName}</Text>
+                            <Text size="lg" style={styles.roundName}>
+                              {roundName}
+                            </Text>
 
-                            <View
-                              style={{
-                                height: 1,
-                                backgroundColor: colors.border,
-                                marginVertical: spacings.lg,
-                              }}
-                            />
+                            <View style={styles.divider} />
 
                             <View style={styles.gameContainer}>
                               {games.map((game, index) => (
@@ -100,8 +101,6 @@ const styles = StyleSheet.create({
   date: {
     color: colors.foreground,
     marginBottom: spacings.lg,
-    fontSize: fontSizes.xl,
-    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   dayScheduleContainer: {
@@ -111,21 +110,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: borderRadius.lg,
     padding: spacings.lg,
   },
   tounamentName: {
     color: colors.primary,
-    fontSize: fontSizes.xl,
-    lineHeight: lineHeights.xl,
     fontWeight: "700",
     marginBottom: spacings.sm,
   },
   roundName: {
     color: colors.mutedForeground,
     fontStyle: "italic",
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
     fontWeight: "600",
   },
   gameContainer: { gap: spacings.lg },
@@ -144,5 +139,10 @@ const styles = StyleSheet.create({
     color: colors.primary,
     flex: 1,
     textAlign: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacings.lg,
   },
 });

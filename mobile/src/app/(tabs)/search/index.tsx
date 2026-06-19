@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { colors } from "@/constants/colors";
 import { useCallback, useState } from "react";
@@ -13,7 +13,8 @@ import { Image } from "expo-image";
 import ChessPlayerCard from "@/components/ChessPlayerCard";
 import { useChessPlayers } from "@/hooks/chess";
 import { spacings } from "@/constants/spacings";
-import { fontSizes, lineHeights } from "@/constants/fonts";
+import Text from "@/components/Text";
+import { borderRadius } from "@/constants/borders";
 
 type Segment = {
   text: string;
@@ -171,7 +172,7 @@ export default function Search() {
 
       setSearchResults(searchResult);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -212,7 +213,7 @@ export default function Search() {
         showsVerticalScrollIndicator={false}
       >
         {!loading && searchResults === null && (
-          <Text style={styles.emptySearchResultsText}>
+          <Text size="lg" style={styles.emptySearchResultsText}>
             Search for a chess player to get info about them
           </Text>
         )}
@@ -251,13 +252,13 @@ export default function Search() {
                         </View>
                       )}
 
-                      <Text style={styles.searchResultName}>
+                      <Text size="xl" style={styles.searchResultName}>
                         {searchResult.name}
                       </Text>
                     </View>
 
                     {countryInfo !== null && (
-                      <Text style={styles.searchResultCountryText}>
+                      <Text size="lg" style={styles.searchResultCountryText}>
                         {countryInfo.name}{" "}
                         {flagStringToEmoji(countryInfo.alpha2)}
                       </Text>
@@ -303,7 +304,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Standard</Text>
 
-                          <Text style={styles.ratingText}>
+                          <Text size="xl" style={styles.ratingText}>
                             {searchResult.standard}
                           </Text>
                         </View>
@@ -321,7 +322,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Rapid</Text>
 
-                          <Text style={styles.ratingText}>
+                          <Text size="xl" style={styles.ratingText}>
                             {searchResult.rapid}
                           </Text>
                         </View>
@@ -339,7 +340,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Blitz</Text>
 
-                          <Text style={styles.ratingText}>
+                          <Text size="xl" style={styles.ratingText}>
                             {searchResult.blitz}
                           </Text>
                         </View>
@@ -347,18 +348,24 @@ export default function Search() {
                     )}
                   </View>
                 ) : (
-                  <Text style={styles.ratingText}>Unrated</Text>
+                  <Text size="xl" style={styles.ratingText}>
+                    Unrated
+                  </Text>
                 )}
               </View>
             );
           })}
 
         {!loading && searchResults !== null && searchResults.length === 0 && (
-          <Text style={styles.emptySearchResultsText}>No results found</Text>
+          <Text size="lg" style={styles.emptySearchResultsText}>
+            No results found
+          </Text>
         )}
 
         {loading && (
-          <Text style={styles.emptySearchResultsText}>Loading...</Text>
+          <Text size="lg" style={styles.emptySearchResultsText}>
+            Loading...
+          </Text>
         )}
 
         {(searchResults === null || searchResults.length === 0) && (
@@ -386,11 +393,11 @@ export default function Search() {
                   {quote.segments.map((segment, i) => (
                     <Text
                       key={i}
-                      style={[
-                        segment.highlighted && {
-                          color: colors.secondaryForeground,
-                        },
-                      ]}
+                      style={{
+                        color: segment.highlighted
+                          ? colors.secondaryForeground
+                          : colors.mutedForeground,
+                      }}
                     >
                       {segment.text}
                     </Text>
@@ -398,7 +405,9 @@ export default function Search() {
                   "
                 </Text>
 
-                <Text style={styles.quoteAuthorText}>— {quote.author}</Text>
+                <Text size="sm" style={styles.quoteAuthorText}>
+                  — {quote.author}
+                </Text>
               </View>
             )}
           </View>
@@ -412,22 +421,20 @@ const styles = StyleSheet.create({
   scrollContainer: { padding: spacings.lg, gap: spacings.lg },
   emptySearchResultsText: {
     color: colors.foreground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   searchResultCard: {
     gap: spacings.lg,
     backgroundColor: colors.card,
     padding: spacings.lg,
-    borderRadius: 16,
+    borderRadius: borderRadius.lg,
   },
   searchResultCardHeader: { flexDirection: "row", gap: spacings.lg },
   searchResultImage: { width: 96, height: 96, borderRadius: 48 },
   searchResultFideTitleContainer: {
     backgroundColor: "#e00000",
     padding: spacings.sm,
-    borderRadius: 4,
+    borderRadius: borderRadius.xs,
   },
   searchResultFideTitleText: {
     color: colors.cardForeground,
@@ -435,14 +442,10 @@ const styles = StyleSheet.create({
   },
   searchResultName: {
     color: colors.cardForeground,
-    fontSize: fontSizes.xl,
-    lineHeight: lineHeights.xl,
     fontWeight: "700",
   },
   searchResultCountryText: {
     color: colors.foreground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
   },
   photoCreditText: {
     color: colors.mutedForeground,
@@ -459,7 +462,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.secondary,
-    borderRadius: 16,
+    borderRadius: borderRadius.lg,
   },
   ratingFormatText: {
     color: colors.secondaryForeground,
@@ -467,8 +470,6 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: colors.cardForeground,
-    fontSize: fontSizes.xl,
-    lineHeight: lineHeights.xl,
     fontWeight: "700",
   },
   chessPlayerCardContainer: {
@@ -485,7 +486,5 @@ const styles = StyleSheet.create({
   quoteSegmentText: { color: colors.mutedForeground, fontStyle: "italic" },
   quoteAuthorText: {
     color: colors.mutedForeground,
-    fontSize: fontSizes.sm,
-    lineHeight: lineHeights.sm,
   },
 });

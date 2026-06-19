@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/colors";
 import TopChessPlayers from "@/components/TopChessPlayers";
 import { ChessPlayer } from "@/api/chess";
@@ -8,8 +8,8 @@ import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
 } from "@/components/ChessPlayerCard";
 import { useChessPlayers, useWorldChampions } from "@/hooks/chess";
-import { fontSizes, lineHeights } from "@/constants/fonts";
 import { spacings } from "@/constants/spacings";
+import Text from "@/components/Text";
 
 const fideLogoUrl =
   "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
@@ -98,11 +98,13 @@ export default function Home() {
     () =>
       error === null ? (
         <View style={styles.container}>
-          <Text style={styles.emptyListText}>No chess players found</Text>
+          <Text size="lg" style={styles.emptyListText}>
+            No chess players found
+          </Text>
         </View>
       ) : (
         <View style={styles.container}>
-          <Text style={styles.emptyListText}>
+          <Text size="lg" style={styles.emptyListText}>
             Something went wrong, please refresh to try again
           </Text>
         </View>
@@ -155,8 +157,6 @@ const styles = StyleSheet.create({
   },
   emptyListText: {
     color: colors.foreground,
-    fontSize: fontSizes.lg,
-    lineHeight: lineHeights.lg,
     fontWeight: "700",
   },
   chessPlayerCardContainer: {
