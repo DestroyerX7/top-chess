@@ -28,6 +28,8 @@ const TopChessPlayers = (
   "widget";
   const rows = environment.widgetFamily === "systemLarge" ? 5 : 2;
   const cols = environment.widgetFamily === "systemSmall" ? 2 : 5;
+  const width = 64;
+  const height = 64;
 
   return (
     <VStack spacing={8}>
@@ -41,15 +43,13 @@ const TopChessPlayers = (
               : chessPlayer.name.split(" ")[0];
 
             return (
-              <ZStack
-                modifiers={[frame({ width: 64, height: 64 }), cornerRadius(8)]}
-              >
+              <ZStack modifiers={[frame({ width, height }), cornerRadius(8)]}>
                 <Image
                   uiImage={chessPlayer.imageUrl}
                   modifiers={[
                     resizable(),
                     aspectRatio({ contentMode: "fill" }),
-                    frame({ width: 64, height: 64 }),
+                    frame({ width, height }),
                   ]}
                 />
 

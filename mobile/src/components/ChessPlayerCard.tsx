@@ -65,35 +65,25 @@ const ChessPlayerCard = React.memo(
             source={{ uri: chessPlayer.imageUrl ?? fideLogoUrl }}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
-            // contentPosition="top center"
-            placeholder={{ blurhash: "LGF5?xYk^6#M@-5c,1J5@[or[Q6." }} // optional
-            transition={300} // crossfade duration in ms when real image loads
           />
 
           <View style={styles.row}>
             <View style={styles.column}>
-              <Text
-                style={{
-                  fontWeight: "700",
-                  textShadowColor: colors.background,
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 2,
-                }}
-              >
+              <Text style={[styles.bold, styles.textShadow]}>
                 #{chessPlayer.livePos}
               </Text>
 
               {chessPlayer.posChangeValue !== 0 && (
                 <Text
-                  style={{
-                    color:
-                      chessPlayer.posChangeValue > 0
-                        ? colors.primary
-                        : colors.destructive,
-                    textShadowColor: colors.background,
-                    textShadowOffset: { width: 0, height: 2 },
-                    textShadowRadius: 2,
-                  }}
+                  style={[
+                    {
+                      color:
+                        chessPlayer.posChangeValue > 0
+                          ? colors.primary
+                          : colors.destructive,
+                    },
+                    styles.textShadow,
+                  ]}
                 >
                   {chessPlayer.posChangeValue > 0 ? "▲" : "▼"}
                   {Math.abs(chessPlayer.posChangeValue)}
@@ -101,15 +91,7 @@ const ChessPlayerCard = React.memo(
               )}
             </View>
 
-            <Text
-              size="8xl"
-              noLineHeight
-              style={{
-                textShadowColor: colors.background,
-                textShadowOffset: { width: 0, height: 2 },
-                textShadowRadius: 2,
-              }}
-            >
+            <Text size="8xl" noLineHeight style={styles.textShadow}>
               {flagStringToEmoji(chessPlayer.flag)}
             </Text>
           </View>
@@ -120,51 +102,40 @@ const ChessPlayerCard = React.memo(
                 name="crown"
                 size={32}
                 color="gold"
-                style={{
-                  textShadowColor: colors.background,
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 2,
-                }}
+                style={styles.textShadow}
               />
             )}
 
             {chessPlayer.live && (
               <Text
-                style={{
-                  fontWeight: "700",
-                  textShadowColor: colors.background,
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 2,
-                  lineHeight: lineHeights.xl,
-                }}
+                style={[
+                  styles.bold,
+                  {
+                    lineHeight: lineHeights.xl,
+                  },
+                  styles.textShadow,
+                ]}
               >
                 🔴 Live
               </Text>
             )}
 
             <View style={styles.ratingRow}>
-              <Text
-                style={{
-                  fontWeight: "700",
-                  textShadowColor: colors.background,
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 2,
-                }}
-              >
+              <Text style={[styles.bold, styles.textShadow]}>
                 {chessPlayer.rating}
               </Text>
 
               {chessPlayer.ratingDiff !== 0 && (
                 <Text
-                  style={{
-                    color:
-                      chessPlayer.ratingDiff > 0
-                        ? colors.primary
-                        : colors.destructive,
-                    textShadowColor: colors.background,
-                    textShadowOffset: { width: 0, height: 2 },
-                    textShadowRadius: 2,
-                  }}
+                  style={[
+                    {
+                      color:
+                        chessPlayer.ratingDiff > 0
+                          ? colors.primary
+                          : colors.destructive,
+                    },
+                    styles.textShadow,
+                  ]}
                 >
                   {chessPlayer.ratingDiff > 0 && "+"}
                   {chessPlayer.ratingDiff}
@@ -172,14 +143,7 @@ const ChessPlayerCard = React.memo(
               )}
             </View>
 
-            <Text
-              style={{
-                fontWeight: "700",
-                textShadowColor: colors.background,
-                textShadowOffset: { width: 0, height: 2 },
-                textShadowRadius: 2,
-              }}
-            >
+            <Text style={[styles.bold, styles.textShadow]}>
               {chessPlayer.name}
             </Text>
           </View>
@@ -196,56 +160,47 @@ export function ChessPlayerCardSkeleton({
 }) {
   return (
     <View style={style}>
-      <View
-        style={{
-          flex: 1,
-          borderRadius: borderRadius.lg,
-          backgroundColor: colors.card,
-          padding: spacings.lg,
-          justifyContent: "space-between",
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
+      <View style={styles.skeletonContainer}>
+        <View style={styles.row}>
           <View
-            style={{
-              height: 64,
-              width: 64,
-              backgroundColor: colors.secondary,
-              borderRadius: borderRadius.sm,
-            }}
+            style={[
+              {
+                height: 64,
+                width: 64,
+              },
+              styles.skeletonPlaceholder,
+            ]}
           />
 
           <View
-            style={{
-              height: 32,
-              width: 32,
-              backgroundColor: colors.secondary,
-              borderRadius: borderRadius.sm,
-            }}
+            style={[
+              {
+                height: 32,
+                width: 32,
+              },
+              styles.skeletonPlaceholder,
+            ]}
           />
         </View>
 
         <View style={{ gap: spacings.md }}>
           <View
-            style={{
-              height: 32,
-              width: "75%",
-              backgroundColor: colors.secondary,
-              borderRadius: borderRadius.sm,
-            }}
+            style={[
+              {
+                height: 32,
+                width: "75%",
+              },
+              styles.skeletonPlaceholder,
+            ]}
           />
 
           <View
-            style={{
-              height: 32,
-              backgroundColor: colors.secondary,
-              borderRadius: borderRadius.sm,
-            }}
+            style={[
+              {
+                height: 32,
+              },
+              styles.skeletonPlaceholder,
+            ]}
           />
         </View>
       </View>
@@ -274,6 +229,25 @@ const styles = StyleSheet.create({
   },
   bottom: {
     justifyContent: "space-between",
+  },
+  textShadow: {
+    textShadowColor: colors.background,
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 2,
+  },
+  bold: {
+    fontWeight: "700",
+  },
+  skeletonContainer: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.card,
+    padding: spacings.lg,
+    justifyContent: "space-between",
+  },
+  skeletonPlaceholder: {
+    backgroundColor: colors.secondary,
+    borderRadius: borderRadius.sm,
   },
 });
 

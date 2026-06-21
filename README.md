@@ -6,8 +6,8 @@ A chess application with a Hono backend and mobile client.
 
 ```
 top-chess/
-├── mobile/    # Mobile application
 ├── backend/   # Hono backend deployed on Cloudflare Workers
+├── mobile/    # Mobile application
 └── web/       # Web application deployed on Cloudflare Pages
 ```
 

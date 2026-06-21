@@ -143,6 +143,86 @@ const quotes: Quote[] = [
     ],
     author: "Thomas Henry Huxley",
   },
+  {
+    segments: [
+      {
+        text: "Chess is life.",
+      },
+    ],
+    author: "Bobby Fischer",
+  },
+  {
+    segments: [
+      {
+        text: "Every chess master was once a beginner.",
+      },
+    ],
+    author: "Irving Chernev",
+  },
+  {
+    segments: [
+      {
+        text: "Chess is the gymnasium of the mind.",
+      },
+    ],
+    author: "Blaise Pascal",
+  },
+  {
+    segments: [
+      {
+        text: "A bad plan is better than no plan at all.",
+      },
+    ],
+    author: "Frank Marshall",
+  },
+  {
+    segments: [
+      {
+        text: "Pawns are the soul of chess.",
+      },
+    ],
+    author: "Francois-Andre Danican Philidor",
+  },
+  {
+    segments: [
+      { text: "Play the opening like a book, " },
+      { text: "the middlegame like a magician, ", highlighted: true },
+      { text: "and the endgame like a machine." },
+    ],
+    author: "Rudolf Spielmann",
+  },
+  {
+    segments: [
+      {
+        text: "In life, as in chess, forethought wins.",
+      },
+    ],
+    author: "Charles Buxton",
+  },
+  {
+    segments: [
+      {
+        text: "Chess holds its master in its own bonds, shackling the mind and brain so that the inner freedom of the very strongest must suffer.",
+      },
+    ],
+    author: "Albert Einstein",
+  },
+  {
+    segments: [
+      {
+        text: "It is not a move, even the best move, that you must seek, but a realizable plan.",
+      },
+    ],
+    author: "Eugene Znosko-Borovsky",
+  },
+  {
+    segments: [
+      {
+        text: "I don't believe in psychology. I believe in good moves.",
+      },
+    ],
+    author: "Bobby Fischer",
+  },
 ];
 
 export default function Search() {

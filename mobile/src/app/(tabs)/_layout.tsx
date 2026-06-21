@@ -20,8 +20,8 @@ export default function TabsLayout() {
     >
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Icon
-          sf={{ default: "house", selected: "house.fill" }}
-          md={{ default: "home", selected: "home_filled" }}
+          src={require("@/assets/images/tabs-icon.png")}
+          renderingMode="template"
         />
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>

@@ -156,7 +156,7 @@ app.get("/image-proxy", async (c) => {
 
   const response = await fetch(url, {
     headers: {
-      "User-Agent": "top-chess/1.0 (bojera22@gmai.com)",
+      "User-Agent": "top-chess/1.0 (destroyerincdev@gmail.com)",
       Referer: "https://en.wikipedia.org/",
     },
   });
@@ -282,7 +282,7 @@ async function getChessPlayerWikiData(name: string) {
     const response = await fetch(
       `https://en.wikipedia.org/w/api.php?${params}`,
       {
-        headers: { "User-Agent": "top-chess/1.0 (bojera22@gmail.com)" },
+        headers: { "User-Agent": "top-chess/1.0 (destroyerincdev@gmail.com)" },
       },
     );
 
