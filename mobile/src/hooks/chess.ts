@@ -35,7 +35,7 @@ export function useDailyGames() {
   return useQuery({
     queryKey: ["dailyGames"],
     queryFn: getDailyGames,
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 10,
   });
 }
 

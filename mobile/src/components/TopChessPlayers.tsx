@@ -3,6 +3,7 @@ import {
   aspectRatio,
   cornerRadius,
   font,
+  foregroundStyle,
   frame,
   padding,
   resizable,
@@ -31,6 +32,9 @@ const TopChessPlayers = (
   const width = 64;
   const height = 64;
 
+  const textColor = "#ffffff";
+  const shadowColor = "#000000";
+
   return (
     <VStack spacing={8}>
       {Array.from({ length: rows }).map((_, rowIndex) => (
@@ -58,7 +62,8 @@ const TopChessPlayers = (
                     modifiers={[
                       font({ size: 12, weight: "bold" }),
                       frame({ maxWidth: Infinity, alignment: "leading" }),
-                      shadow({ color: "#000000", radius: 2 }),
+                      shadow({ color: shadowColor, radius: 2 }),
+                      foregroundStyle(textColor),
                     ]}
                   >
                     #{chessPlayer.livePos}
@@ -70,7 +75,8 @@ const TopChessPlayers = (
                     modifiers={[
                       font({ size: 12, weight: "bold" }),
                       frame({ maxWidth: Infinity, alignment: "leading" }),
-                      shadow({ color: "#000000", radius: 2 }),
+                      shadow({ color: shadowColor, radius: 2 }),
+                      foregroundStyle(textColor),
                     ]}
                   >
                     {chessPlayer.rating}
@@ -80,7 +86,8 @@ const TopChessPlayers = (
                     modifiers={[
                       font({ size: 12, weight: "bold" }),
                       frame({ maxWidth: Infinity, alignment: "leading" }),
-                      shadow({ color: "#000000", radius: 2 }),
+                      shadow({ color: shadowColor, radius: 2 }),
+                      foregroundStyle(textColor),
                     ]}
                   >
                     {firstName}

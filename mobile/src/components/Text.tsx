@@ -19,8 +19,8 @@ export default function Text({
 }: Props) {
   const computedStyle: TextStyle = {
     fontSize: fontSizes[size],
-    ...(noLineHeight ? {} : { lineHeight: lineHeights[size] }),
     color: colors.foreground,
+    ...(noLineHeight ? {} : { lineHeight: lineHeights[size] }),
   };
 
   return <RNText style={[computedStyle, style]} {...rest} />;

@@ -23,9 +23,9 @@ export default function Home() {
     data: chessPlayers,
     isPending,
     error,
-    isFetching,
     refetch,
     isStale,
+    isRefetching,
   } = useChessPlayers();
 
   const { data: worldChampions } = useWorldChampions();
@@ -175,7 +175,7 @@ export default function Home() {
           isPending ? String(index) : String(item.fideId)
         }
         renderItem={isPending ? renderSkeleton : renderItem}
-        refreshing={!isPending && isFetching}
+        refreshing={isRefetching}
         onRefresh={() => {
           if (!isStale) {
             return;
