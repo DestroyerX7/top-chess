@@ -575,16 +575,16 @@ export default {
     const db = drizzle(neonClient);
 
     if (controller.cron === "0 * * * *") {
+    } else if (controller.cron === "0 */6 * * *") {
+    } else if (controller.cron === "0 0 * * *") {
       // Uses 3 requests and 1 scraper api credit
       await scrapeChessPlayers(
         env.SCRAPER_API_KEY,
         env.CHESS_PLAYER_WIKI_DATA_QUEUE,
         db,
       );
-    } else if (controller.cron === "0 */6 * * *") {
       // Uses 2 requests and 1 scraper api credit
       await scrapeDailyGames(env.SCRAPER_API_KEY, db);
-    } else if (controller.cron === "0 0 * * *") {
       // Uses 2 requests and 1 scraper api credit
       await scrapeWorldChampions(env.SCRAPER_API_KEY, db);
     }
