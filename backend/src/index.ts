@@ -335,7 +335,7 @@ async function getChessPlayerWikiData(name: string) {
 }
 
 async function scrapeChessPlayers(
-  scraperApikey: string,
+  browserBaseApiKey: string,
   chessPlayerWikiDataQueue: Queue,
   db: NeonHttpDatabase<Record<string, never>> & {
     $client: NeonQueryFunction<false, false>;
@@ -344,18 +344,23 @@ async function scrapeChessPlayers(
   try {
     console.log("Scraping chess players...");
 
-    const params = new URLSearchParams({
-      api_key: scraperApikey,
-      url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
+    const response = await fetch("https://api.browserbase.com/v1/fetch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-BB-API-Key": browserBaseApiKey,
+      },
+      body: JSON.stringify({
+        url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
+      }),
     });
-
-    const response = await fetch(`https://api.scraperapi.com?${params}`);
 
     if (!response.ok) {
       throw new Error(`${response.status} ${response.statusText}`);
     }
 
-    const data: ScrapedChessPlayer[] = await response.json();
+    const body: { content: string } = await response.json();
+    const data: ScrapedChessPlayer[] = JSON.parse(body.content);
 
     const flagOverrides: Record<string, string> = {
       ff: "ru",
@@ -462,7 +467,7 @@ async function scrapeChessPlayers(
 }
 
 async function scrapeDailyGames(
-  scraperApikey: string,
+  browserBaseApiKey: string,
   db: NeonHttpDatabase<Record<string, never>> & {
     $client: NeonQueryFunction<false, false>;
   },
@@ -470,18 +475,23 @@ async function scrapeDailyGames(
   try {
     console.log("Scraping daily games...");
 
-    const params = new URLSearchParams({
-      api_key: scraperApikey,
-      url: "https://2700chess.com/next/daily-games?gender=men",
+    const response = await fetch("https://api.browserbase.com/v1/fetch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-BB-API-Key": browserBaseApiKey,
+      },
+      body: JSON.stringify({
+        url: "https://2700chess.com/next/daily-games?gender=men",
+      }),
     });
-
-    const response = await fetch(`https://api.scraperapi.com?${params}`);
 
     if (!response.ok) {
       throw new Error(`${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const body: { content: string } = await response.json();
+    const data = JSON.parse(body.content);
 
     await db
       .insert(dbDailyGames)
@@ -510,7 +520,7 @@ async function scrapeDailyGames(
 }
 
 async function scrapeWorldChampions(
-  scraperApikey: string,
+  browserBaseApiKey: string,
   db: NeonHttpDatabase<Record<string, never>> & {
     $client: NeonQueryFunction<false, false>;
   },
@@ -518,18 +528,23 @@ async function scrapeWorldChampions(
   try {
     console.log("Scraping world champions...");
 
-    const params = new URLSearchParams({
-      api_key: scraperApikey,
-      url: "https://2700chess.com/next/world-champions",
+    const response = await fetch("https://api.browserbase.com/v1/fetch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-BB-API-Key": browserBaseApiKey,
+      },
+      body: JSON.stringify({
+        url: "https://2700chess.com/next/world-champions",
+      }),
     });
-
-    const response = await fetch(`https://api.scraperapi.com?${params}`);
 
     if (!response.ok) {
       throw new Error(`${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const body: { content: string } = await response.json();
+    const data = JSON.parse(body.content);
 
     await db
       .insert(dbWorldChampions)
@@ -564,8 +579,8 @@ export default {
 
   // Cloudflare limit of 50 async requests in a scheduled cron job
   // e.g await getData("https://url.com")
-  // ScraperAPI limit of 1000 credits per month
-  // Currently uses 899 scraper api credits per month
+  // Browserbase limit of 1000 credits per month
+  // Currently uses 899 scraping credits per month
   async scheduled(
     controller: ScheduledController,
     env: CloudflareBindings,
@@ -575,18 +590,18 @@ export default {
     const db = drizzle(neonClient);
 
     if (controller.cron === "0 * * * *") {
-    } else if (controller.cron === "0 */6 * * *") {
-    } else if (controller.cron === "0 0 * * *") {
-      // Uses 3 requests and 1 scraper api credit
+      // Uses 3 requests and 1 scraping credit
       await scrapeChessPlayers(
-        env.SCRAPER_API_KEY,
+        env.BROWSERBASE_API_KEY,
         env.CHESS_PLAYER_WIKI_DATA_QUEUE,
         db,
       );
-      // Uses 2 requests and 1 scraper api credit
-      await scrapeDailyGames(env.SCRAPER_API_KEY, db);
-      // Uses 2 requests and 1 scraper api credit
-      await scrapeWorldChampions(env.SCRAPER_API_KEY, db);
+    } else if (controller.cron === "0 */6 * * *") {
+      // Uses 2 requests and 1 scraping credit
+      await scrapeDailyGames(env.BROWSERBASE_API_KEY, db);
+    } else if (controller.cron === "0 0 * * *") {
+      // Uses 2 requests and 1 scraping credit
+      await scrapeWorldChampions(env.BROWSERBASE_API_KEY, db);
     }
 
     console.log("Cron job finished");
