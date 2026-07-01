@@ -119,9 +119,9 @@ app.get("/get-top-chess-players", async (c) => {
     const limitParam = c.req.query("limit");
     const limit = limitParam !== undefined ? Number(limitParam) : 250;
 
-    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 250) {
       return c.json(
-        { error: "limit param must be an integer in the range [1,100]" },
+        { error: "limit param must be an integer in the range [1,250]" },
         400,
       );
     }
