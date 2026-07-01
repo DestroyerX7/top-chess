@@ -117,7 +117,7 @@ const app = new Hono<{ Bindings: CloudflareBindings }>();
 app.get("/get-top-chess-players", async (c) => {
   try {
     const limitParam = c.req.query("limit");
-    const limit = limitParam !== undefined ? Number(limitParam) : 100;
+    const limit = limitParam !== undefined ? Number(limitParam) : 250;
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
       return c.json(
@@ -334,6 +334,12 @@ async function getChessPlayerWikiData(name: string) {
   }
 }
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size),
+  );
+}
+
 async function scrapeChessPlayers(
   browserBaseApiKey: string,
   chessPlayerWikiDataQueue: Queue,
@@ -351,7 +357,7 @@ async function scrapeChessPlayers(
         "X-BB-API-Key": browserBaseApiKey,
       },
       body: JSON.stringify({
-        url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=100",
+        url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=250",
       }),
     });
 
@@ -360,7 +366,7 @@ async function scrapeChessPlayers(
     }
 
     const body: { content: string } = await response.json();
-    const data: ScrapedChessPlayer[] = JSON.parse(body.content);
+    const { items }: { items: ScrapedChessPlayer[] } = JSON.parse(body.content);
 
     const flagOverrides: Record<string, string> = {
       ff: "ru",
@@ -371,7 +377,7 @@ async function scrapeChessPlayers(
       "FIDE (Not a National Fed.)": "Russia",
     };
 
-    const chessPlayers = data.map((scrapedChessPlayer) => ({
+    const chessPlayers = items.map((scrapedChessPlayer) => ({
       fideId: scrapedChessPlayer.fideid,
       name: scrapedChessPlayer.name,
       flag: flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag,
@@ -442,15 +448,19 @@ async function scrapeChessPlayers(
         `Queueing ${chessPlayersToQueue.length} chess player(s) for wikipedia data fetching...`,
       );
 
-      await chessPlayerWikiDataQueue.sendBatch(
-        chessPlayersToQueue.map((chessPlayer) => ({
-          body: {
-            fideId: chessPlayer.fideId,
-            name: chessPlayer.name,
-          },
-          contentType: "json",
-        })),
-      );
+      const batches = chunk(chessPlayersToQueue, 100);
+
+      for (const batch of batches) {
+        await chessPlayerWikiDataQueue.sendBatch(
+          batch.map((chessPlayer) => ({
+            body: {
+              fideId: chessPlayer.fideId,
+              name: chessPlayer.name,
+            },
+            contentType: "json",
+          })),
+        );
+      }
     } else {
       console.log("No chess players to queue for wikipedia data fetching");
     }
@@ -588,6 +598,12 @@ export default {
   ) {
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
+
+    await scrapeChessPlayers(
+      env.BROWSERBASE_API_KEY,
+      env.CHESS_PLAYER_WIKI_DATA_QUEUE,
+      db,
+    );
 
     if (controller.cron === "0 * * * *") {
       // Uses 3 requests and 1 scraping credit
