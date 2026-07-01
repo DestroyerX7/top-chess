@@ -114,14 +114,23 @@ type WikiPage = {
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
+const chessPlayerScrapeAmount = 250;
+
 app.get("/get-top-chess-players", async (c) => {
   try {
     const limitParam = c.req.query("limit");
-    const limit = limitParam !== undefined ? Number(limitParam) : 250;
+    const limit =
+      limitParam !== undefined ? Number(limitParam) : chessPlayerScrapeAmount;
 
-    if (!Number.isInteger(limit) || limit < 1 || limit > 250) {
+    if (
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > chessPlayerScrapeAmount
+    ) {
       return c.json(
-        { error: "limit param must be an integer in the range [1,250]" },
+        {
+          error: `limit param must be an integer in the range [1,${chessPlayerScrapeAmount}]`,
+        },
         400,
       );
     }
@@ -357,7 +366,7 @@ async function scrapeChessPlayers(
         "X-BB-API-Key": browserBaseApiKey,
       },
       body: JSON.stringify({
-        url: "https://2700chess.com/next/main-table-men?sort=standard&per-page=250",
+        url: `https://2700chess.com/next/main-table-men?sort=standard&per-page=${chessPlayerScrapeAmount}`,
       }),
     });
 
