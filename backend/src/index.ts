@@ -450,17 +450,16 @@ async function scrapeChessPlayers(
 
       const batches = chunk(chessPlayersToQueue, 100);
 
-      for (const batch of batches) {
-        await chessPlayerWikiDataQueue.sendBatch(
-          batch.map((chessPlayer) => ({
-            body: {
-              fideId: chessPlayer.fideId,
-              name: chessPlayer.name,
-            },
-            contentType: "json",
-          })),
-        );
-      }
+      await Promise.allSettled(
+        batches.map((batch) =>
+          chessPlayerWikiDataQueue.sendBatch(
+            batch.map((chessPlayer) => ({
+              body: { fideId: chessPlayer.fideId, name: chessPlayer.name },
+              contentType: "json",
+            })),
+          ),
+        ),
+      );
     } else {
       console.log("No chess players to queue for wikipedia data fetching");
     }
@@ -598,12 +597,6 @@ export default {
   ) {
     const neonClient = neon(env.NEON_DATABASE_URL);
     const db = drizzle(neonClient);
-
-    await scrapeChessPlayers(
-      env.BROWSERBASE_API_KEY,
-      env.CHESS_PLAYER_WIKI_DATA_QUEUE,
-      db,
-    );
 
     if (controller.cron === "0 * * * *") {
       // Uses 3 requests and 1 scraping credit
