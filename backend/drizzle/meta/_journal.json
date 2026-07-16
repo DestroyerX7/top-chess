@@ -71,6 +71,13 @@
       "when": 1781548777188,
       "tag": "0009_hard_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784191749994,
+      "tag": "0010_tough_warpath",
+      "breakpoints": true
     }
   ]
 }

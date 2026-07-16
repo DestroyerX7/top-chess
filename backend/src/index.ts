@@ -3,93 +3,92 @@ import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
 import {
   chessPlayers as dbChessPlayers,
+  topChessPlayers as dbTopChessPlayers,
   dailyGames as dbDailyGames,
   worldChampions as dbWorldChampions,
 } from "./db/schema";
 import { eq, notInArray, sql } from "drizzle-orm";
 
 type ScrapedChessPlayer = {
-  // Identity
   fideid: number;
   name: string;
   age: number;
-  flag: string;
-  country_name: string;
-  birthday: string;
-  birthday_unix: number | null;
-
-  // Standard rating
-  rating: string;
+  raiting: string; // note: numeric value as string, e.g. "2574.0"
   raitingDiff: number;
-  standard_raiting: string;
-  standard_tooltip_text: string;
-  standard_last_update: number | null;
-  standard_games_count: number;
-  standard_best_rating_title: string;
-
-  // Blitz rating
-  blitz_raiting: string;
-  blitz_tooltip_text: string;
-  blitz_last_update: number | null;
-  blitz_games_count: number;
-  blitz_best_rating_title: string;
-
-  // Rapid rating
-  rapid_raiting: string;
-  rapid_tooltip_text: string;
-  rapid_last_update: number | null;
-  rapid_games_count: number;
-  rapid_best_rating_title: string;
-
-  // Junior rating
-  junior_raiting: string;
-  junior_tooltip_text: string;
-
-  // Live positions
-  live_pos: number;
-  live_standard_pos: number;
-  live_rapid_pos: number;
-  live_blitz_pos: number;
-  live_juniors_pos: number;
-  live_girls_pos: number | null;
-
-  // Position changes
-  pos_change: string;
+  pos_change: string; // e.g. "↑2", "↓3", or "" if unchanged
   pos_change_value: number;
 
-  // Year ago changes
-  year_ago_rating_change: number;
-  year_ago_ranking_change: number;
+  // Live position rankings across different categories (null if not applicable)
+  live_pos: number;
+  live_standard_pos: number;
+  live_rapid_pos: number | null;
+  live_blitz_pos: number | null;
+  live_juniors_pos: number | null;
+  live_girls_pos: number | null;
+  live_u16_pos: number | null;
+  live_junior_standard_pos: number | null;
+  live_junior_blitz_pos: number | null;
+  live_junior_rapid_pos: number | null;
+  live_u16_standard_pos: number | null;
+  live_u16_blitz_pos: number | null;
+  live_u16_rapid_pos: number | null;
 
-  // Live status
+  flag: string; // country code, e.g. "bg", "us"
+  avatar: string; // path, e.g. "/file?id=1211" or "/img/avatar/noavatar.png"
+  games_archive: string; // relative URL
+  statistic: string; // relative URL
+  profile: string; // relative URL
+  games_count: number;
+
+  country_name: string;
+  birthday: string; // e.g. "25 Oct 1985", can be ""
+  birthday_unix: number | null;
+
+  sort_helper: string;
+  sort_helper_inv: string;
+
+  best_pos_title: string;
+  best_rating_title: string;
+  tooltip_text: string;
+
   live: boolean;
   has_live_standard: boolean;
   has_live_rapid: boolean;
   has_live_blitz: boolean;
-  has_unfinished_standard: boolean;
-  has_unfinished_rapid: boolean;
-  has_unfinished_blitz: boolean;
 
-  // History & stats
-  rating_history_sparkline: number[];
-  games_count: number;
-  last_update: number | null;
+  last_update: number | null; // unix timestamp
+  type: string; // e.g. "standard"
+
+  year_ago_rating_change: number;
+  year_ago_ranking_change: number;
+  rating_history_sparkline: number[]; // fixed-length array (13 in examples)
   last_updated_gmt: string;
-  tooltip_text: string;
-  type: string;
 
-  // Records
-  best_pos_title: string;
-  best_rating_title: string;
+  // Per time-control ratings — usually numeric strings, but can carry
+  // suffixes like "i" (inactive) or be "unrat." for unrated
+  standard_raiting: string;
+  blitz_raiting: string;
+  rapid_raiting: string;
+  junior_raiting: string;
 
-  // Links
-  games_archive: string;
-  statistic: string;
-  profile: string;
+  standard_tooltip_text: string;
+  blitz_tooltip_text: string;
+  rapid_tooltip_text: string;
+  junior_tooltip_text: string;
 
-  // Sorting helpers
-  sort_helper: string;
-  sort_helper_inv: string;
+  standard_last_update: number | null;
+  blitz_last_update: number | null;
+  rapid_last_update: number | null;
+
+  standard_games_count: number;
+  blitz_games_count: number;
+  rapid_games_count: number;
+
+  standard_best_rating_title: string;
+  blitz_best_rating_title: string;
+  rapid_best_rating_title: string; // can be "" when no rapid history
+
+  rating: string; // duplicate of `raiting`
 };
 
 type WikiResponse = {
@@ -115,6 +114,46 @@ type WikiPage = {
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 const chessPlayerScrapeAmount = 250;
+
+app.get("/get-top-chess-players-updated", async (c) => {
+  try {
+    const limitParam = c.req.query("limit");
+    const limit =
+      limitParam !== undefined ? Number(limitParam) : chessPlayerScrapeAmount;
+
+    if (
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > chessPlayerScrapeAmount
+    ) {
+      return c.json(
+        {
+          error: `limit param must be an integer in the range [1,${chessPlayerScrapeAmount}]`,
+        },
+        400,
+      );
+    }
+
+    const neonClient = neon(c.env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const chessPlayers = await db
+      .select()
+      .from(dbTopChessPlayers)
+      .orderBy(dbTopChessPlayers.standardRank)
+      .limit(limit);
+
+    return c.json(chessPlayers);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Database fetch error:", error.message);
+    } else {
+      console.error("Database fetch error");
+    }
+
+    return c.json({ error: "Failed to get top chess players" }, 500);
+  }
+});
 
 app.get("/get-top-chess-players", async (c) => {
   try {
@@ -156,31 +195,31 @@ app.get("/get-top-chess-players", async (c) => {
   }
 });
 
-app.get("/image-proxy", async (c) => {
-  const url = c.req.query("url");
+// app.get("/image-proxy", async (c) => {
+//   const url = c.req.query("url");
 
-  if (url === undefined) {
-    return c.json({ error: "url not provided" }, 400);
-  }
+//   if (url === undefined) {
+//     return c.json({ error: "url not provided" }, 400);
+//   }
 
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "top-chess/1.0 (destroyerincdev@gmail.com)",
-      Referer: "https://en.wikipedia.org/",
-    },
-  });
+//   const response = await fetch(url, {
+//     headers: {
+//       "User-Agent": "top-chess/1.0 (destroyerincdev@gmail.com)",
+//       Referer: "https://en.wikipedia.org/",
+//     },
+//   });
 
-  if (!response.ok) {
-    return c.json({ error: `Failed to fetch image: ${response.status}` }, 502);
-  }
+//   if (!response.ok) {
+//     return c.json({ error: `Failed to fetch image: ${response.status}` }, 502);
+//   }
 
-  return new Response(response.body, {
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "image/jpeg",
-      "Cache-Control": "public, max-age=604800", // cache for 7 days
-    },
-  });
-});
+//   return new Response(response.body, {
+//     headers: {
+//       "Content-Type": response.headers.get("Content-Type") ?? "image/jpeg",
+//       "Cache-Control": "public, max-age=604800", // cache for 7 days
+//     },
+//   });
+// });
 
 app.get("/get-chess-player/:fideId", async (c) => {
   try {
@@ -208,8 +247,8 @@ app.get("/get-chess-player/:fideId", async (c) => {
 
     const [chessPlayer] = await db
       .select()
-      .from(dbChessPlayers)
-      .where(eq(dbChessPlayers.fideId, fideId));
+      .from(dbTopChessPlayers)
+      .where(eq(dbTopChessPlayers.fideId, fideId));
 
     return c.json(chessPlayer ?? null);
   } catch (error) {
@@ -349,7 +388,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
   );
 }
 
-async function scrapeChessPlayers(
+async function scrapeTopChessPlayers(
   browserBaseApiKey: string,
   chessPlayerWikiDataQueue: Queue,
   db: NeonHttpDatabase<Record<string, never>> & {
@@ -357,7 +396,7 @@ async function scrapeChessPlayers(
   },
 ) {
   try {
-    console.log("Scraping chess players...");
+    console.log("Scraping top chess players...");
 
     const response = await fetch("https://api.browserbase.com/v1/fetch", {
       method: "POST",
@@ -375,7 +414,8 @@ async function scrapeChessPlayers(
     }
 
     const body: { content: string } = await response.json();
-    const { items }: { items: ScrapedChessPlayer[] } = JSON.parse(body.content);
+    const { items: scrapedTopChessPlayers }: { items: ScrapedChessPlayer[] } =
+      JSON.parse(body.content);
 
     const flagOverrides: Record<string, string> = {
       ff: "ru",
@@ -386,69 +426,152 @@ async function scrapeChessPlayers(
       "FIDE (Not a National Fed.)": "Russia",
     };
 
-    const chessPlayers = items.map((scrapedChessPlayer) => ({
-      fideId: scrapedChessPlayer.fideid,
-      name: scrapedChessPlayer.name,
-      flag: flagOverrides[scrapedChessPlayer.flag] ?? scrapedChessPlayer.flag,
-      countryName:
-        countryNameOverrides[scrapedChessPlayer.country_name] ??
-        scrapedChessPlayer.country_name,
-      rating: Number(scrapedChessPlayer.rating),
-      livePos: scrapedChessPlayer.live_pos,
-      ratingDiff: scrapedChessPlayer.raitingDiff,
-      posChangeValue: scrapedChessPlayer.pos_change_value,
-      yearAgoRatingChange: scrapedChessPlayer.year_ago_rating_change,
-      yearAgoRankingChange: scrapedChessPlayer.year_ago_ranking_change,
-      gamesCount: scrapedChessPlayer.games_count,
-      age: scrapedChessPlayer.age,
+    const topChessPlayers = scrapedTopChessPlayers.map((c) => ({
+      fideId: c.fideid,
+      name: c.name,
+      age: c.age,
+      flag: flagOverrides[c.flag] ?? c.flag,
+      countryName: countryNameOverrides[c.country_name] ?? c.country_name,
       birthday:
-        scrapedChessPlayer.birthday_unix !== null
-          ? new Date(scrapedChessPlayer.birthday_unix * 1000)
-              .toISOString()
-              .split("T")[0]
+        c.birthday_unix !== null
+          ? new Date(c.birthday_unix * 1000).toISOString().split("T")[0]
           : null,
-      bestPosTitle: scrapedChessPlayer.best_pos_title,
-      bestRatingTitle: scrapedChessPlayer.best_rating_title,
-      live: scrapedChessPlayer.live,
-      lastUpdatedGmt: new Date(scrapedChessPlayer.last_updated_gmt + " UTC"),
-      ratingHistory: scrapedChessPlayer.rating_history_sparkline,
+
+      standardRating: Number(c.rating),
+      rapidRating:
+        c.rapid_raiting === "unrat."
+          ? null
+          : c.rapid_raiting.includes("i")
+            ? Number(c.rapid_raiting.split(" ")[0])
+            : Number(c.rapid_raiting),
+      blitzRating:
+        c.blitz_raiting === "unrat."
+          ? null
+          : c.blitz_raiting.includes("i")
+            ? Number(c.blitz_raiting.split(" ")[0])
+            : Number(c.blitz_raiting),
+
+      rapidRatingInactive: c.rapid_raiting.includes("i"),
+      blitzRatingInactive: c.blitz_raiting.includes("i"),
+
+      standardRank: c.live_standard_pos,
+      rapidRank: c.live_rapid_pos,
+      blitzRank: c.live_blitz_pos,
+
+      standardJuniorRank: c.live_junior_standard_pos,
+      rapidJuniorRank: c.live_junior_rapid_pos,
+      blitzJuniorRank: c.live_junior_blitz_pos,
+
+      standardU16Rank: c.live_u16_standard_pos,
+      rapidU16Rank: c.live_u16_rapid_pos,
+      blitzU16Rank: c.live_u16_blitz_pos,
+
+      standardBestRankTitle: c.best_pos_title,
+      standardBestRatingTitle: c.standard_best_rating_title,
+      rapidBestRatingTitle:
+        c.rapid_best_rating_title.length > 0 ? c.rapid_best_rating_title : null,
+      blitzBestRatingTitle:
+        c.blitz_best_rating_title.length > 0 ? c.blitz_best_rating_title : null,
+
+      standardMonthRatingChange: c.raitingDiff,
+      standardMonthRankChange: c.pos_change_value,
+
+      standardYearRatingChange: c.year_ago_rating_change,
+      standardYearRankChange: c.year_ago_ranking_change,
+
+      standardRatingHistory: c.rating_history_sparkline,
+
+      hasLiveStandardGame: c.has_live_standard,
+      hasLiveRapidGame: c.has_live_rapid,
+      hasLiveBlitzGame: c.has_live_blitz,
+
+      recentStandardGamesCount: c.standard_games_count,
+      recentRapidGamesCount: c.rapid_games_count,
+      recentBlitzGamesCount: c.blitz_games_count,
+
+      standardLastUpdate:
+        c.standard_last_update !== null
+          ? new Date(c.standard_last_update * 1000)
+          : null,
+      rapidLastUpdate:
+        c.rapid_last_update !== null
+          ? new Date(c.rapid_last_update * 1000)
+          : null,
+      blitzLastUpdate:
+        c.blitz_last_update !== null
+          ? new Date(c.blitz_last_update * 1000)
+          : null,
     }));
 
-    const updatedChessPlayers = await db
-      .insert(dbChessPlayers)
-      .values(chessPlayers)
+    const updatedTopChessPlayers = await db
+      .insert(dbTopChessPlayers)
+      .values(topChessPlayers)
       .onConflictDoUpdate({
-        target: dbChessPlayers.fideId,
+        target: dbTopChessPlayers.fideId,
         set: {
           name: sql`excluded.name`,
+          age: sql`excluded.age`,
           flag: sql`excluded.flag`,
           countryName: sql`excluded.country_name`,
-          rating: sql`excluded.rating`,
-          livePos: sql`excluded.live_pos`,
-          ratingDiff: sql`excluded.rating_diff`,
-          posChangeValue: sql`excluded.pos_change_value`,
-          yearAgoRatingChange: sql`excluded.year_ago_rating_change`,
-          yearAgoRankingChange: sql`excluded.year_ago_ranking_change`,
-          gamesCount: sql`excluded.games_count`,
-          age: sql`excluded.age`,
           birthday: sql`excluded.birthday`,
-          bestPosTitle: sql`excluded.best_pos_title`,
-          bestRatingTitle: sql`excluded.best_rating_title`,
-          live: sql`excluded.live`,
-          lastUpdatedGmt: sql`excluded.last_updated_gmt`,
-          ratingHistory: sql`excluded.rating_history`,
+
+          standardRating: sql`excluded.standard_rating`,
+          rapidRating: sql`excluded.rapid_rating`,
+          blitzRating: sql`excluded.blitz_rating`,
+
+          rapidRatingInactive: sql`excluded.rapid_rating_inactive`,
+          blitzRatingInactive: sql`excluded.blitz_rating_inactive`,
+
+          standardRank: sql`excluded.standard_rank`,
+          rapidRank: sql`excluded.rapid_rank`,
+          blitzRank: sql`excluded.blitz_rank`,
+
+          standardJuniorRank: sql`excluded.standard_junior_rank`,
+          rapidJuniorRank: sql`excluded.rapid_junior_rank`,
+          blitzJuniorRank: sql`excluded.blitz_junior_rank`,
+
+          standardU16Rank: sql`excluded.standard_u16_rank`,
+          rapidU16Rank: sql`excluded.rapid_u16_rank`,
+          blitzU16Rank: sql`excluded.blitz_u16_rank`,
+
+          standardBestRankTitle: sql`excluded.standard_best_rank_title`,
+          standardBestRatingTitle: sql`excluded.standard_best_rating_title`,
+          rapidBestRatingTitle: sql`excluded.rapid_best_rating_title`,
+          blitzBestRatingTitle: sql`excluded.blitz_best_rating_title`,
+
+          standardMonthRatingChange: sql`excluded.standard_month_rating_change`,
+          standardMonthRankChange: sql`excluded.standard_month_rank_change`,
+
+          standardYearRatingChange: sql`excluded.standard_year_rating_change`,
+          standardYearRankChange: sql`excluded.standard_year_rank_change`,
+
+          standardRatingHistory: sql`excluded.standard_rating_history`,
+
+          hasLiveStandardGame: sql`excluded.has_live_standard_game`,
+          hasLiveRapidGame: sql`excluded.has_live_rapid_game`,
+          hasLiveBlitzGame: sql`excluded.has_live_blitz_game`,
+
+          recentStandardGamesCount: sql`excluded.recent_standard_games_count`,
+          recentRapidGamesCount: sql`excluded.recent_rapid_games_count`,
+          recentBlitzGamesCount: sql`excluded.recent_blitz_games_count`,
+
+          standardLastUpdate: sql`excluded.standard_last_update`,
+          rapidLastUpdate: sql`excluded.rapid_last_update`,
+          blitzLastUpdate: sql`excluded.blitz_last_update`,
         },
       })
       .returning();
 
-    const fideIds = chessPlayers.map((chessPlayer) => chessPlayer.fideId);
+    const fideIds = topChessPlayers.map((c) => c.fideId);
     await db
-      .delete(dbChessPlayers)
-      .where(notInArray(dbChessPlayers.fideId, fideIds));
+      .delete(dbTopChessPlayers)
+      .where(notInArray(dbTopChessPlayers.fideId, fideIds));
 
-    console.log("Successfully scraped and saved chess players to database!");
+    console.log(
+      "Successfully scraped and saved top chess players to database!",
+    );
 
-    const chessPlayersToQueue = updatedChessPlayers.filter(
+    const chessPlayersToQueue = updatedTopChessPlayers.filter(
       (c) => c.wikipediaUrl === null,
     );
 
@@ -475,11 +598,11 @@ async function scrapeChessPlayers(
   } catch (error) {
     if (error instanceof Error) {
       console.error(
-        "Something went wrong scraping chess players:",
+        "Something went wrong scraping top chess players:",
         error.message,
       );
     } else {
-      console.error("Something went wrong scraping chess players");
+      console.error("Something went wrong scraping top chess players");
     }
   }
 }
@@ -609,7 +732,7 @@ export default {
 
     if (controller.cron === "0 * * * *") {
       // Uses 3 requests and 1 scraping credit
-      await scrapeChessPlayers(
+      await scrapeTopChessPlayers(
         env.BROWSERBASE_API_KEY,
         env.CHESS_PLAYER_WIKI_DATA_QUEUE,
         db,
@@ -649,9 +772,9 @@ export default {
 
         // Uses 1 request per message
         await db
-          .update(dbChessPlayers)
+          .update(dbTopChessPlayers)
           .set(chessPlayerWikiData)
-          .where(eq(dbChessPlayers.fideId, message.body.fideId));
+          .where(eq(dbTopChessPlayers.fideId, message.body.fideId));
 
         message.ack();
       } catch (error) {
