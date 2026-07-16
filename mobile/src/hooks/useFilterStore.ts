@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-type FilterOption = "all" | "live" | "rated-above-2700";
+type FilterOption = "all" | "live" | "rated-above-2700" | "top-100";
 
 export type SortOption =
-  | "rating-descending"
-  | "rating-ascending"
+  | "world-rank-descending"
+  | "world-rank-ascending"
   | "rating-change-descending"
   | "rating-change-ascending"
   | "ranking-change-descending"
@@ -23,7 +23,7 @@ type FilterState = {
 
 export const useFilterStore = create<FilterState>((set) => ({
   filterOption: "all",
-  sortOption: "rating-descending",
+  sortOption: "world-rank-ascending",
   setFilterOption: (filterBy) => set({ filterOption: filterBy }),
   setSortOption: (sortBy) => set({ sortOption: sortBy }),
 }));

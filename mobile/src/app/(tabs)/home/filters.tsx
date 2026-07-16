@@ -11,6 +11,7 @@ const filterOptions = [
   { value: "all", label: "All" },
   { value: "live", label: "Live" },
   { value: "rated-above-2700", label: "Rated Above 2700" },
+  { value: "top-100", label: "Top 100" },
 ] as const;
 
 const sortOptions: (
@@ -28,10 +29,10 @@ const sortOptions: (
     }
 )[] = [
   {
-    title: "Rating",
-    default: "desc",
-    asc: "rating-ascending",
-    desc: "rating-descending",
+    title: "World Rank",
+    default: "asc",
+    asc: "world-rank-ascending",
+    desc: "world-rank-descending",
   },
   {
     title: "Rating Change",
@@ -109,9 +110,9 @@ export default function FiltersModal() {
               const freshPress =
                 sortOption !== option.asc && sortOption !== option.desc;
 
-              if (freshPress && option.default == "asc") {
+              if (freshPress && option.default === "asc") {
                 setSortOption(option.asc);
-              } else if (freshPress && option.default == "desc") {
+              } else if (freshPress && option.default === "desc") {
                 setSortOption(option.desc);
               } else if (sortOption === option.asc && option.desc !== null) {
                 setSortOption(option.desc);

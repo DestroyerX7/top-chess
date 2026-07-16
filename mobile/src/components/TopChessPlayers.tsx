@@ -13,8 +13,8 @@ import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
 type WidgetChessPlayer = {
   name: string;
-  rating: number;
-  livePos: number;
+  standardRating: number;
+  standardRank: number;
   imageUrl: string;
 };
 
@@ -47,7 +47,10 @@ const TopChessPlayers = (
               : chessPlayer.name.split(" ")[0];
 
             return (
-              <ZStack modifiers={[frame({ width, height }), cornerRadius(8)]}>
+              <ZStack
+                key={rowIndex * rows + colIndex}
+                modifiers={[frame({ width, height }), cornerRadius(8)]}
+              >
                 <Image
                   uiImage={chessPlayer.imageUrl}
                   modifiers={[
@@ -66,7 +69,7 @@ const TopChessPlayers = (
                       foregroundStyle(textColor),
                     ]}
                   >
-                    #{chessPlayer.livePos}
+                    #{chessPlayer.standardRank}
                   </Text>
 
                   <Spacer />
@@ -79,7 +82,7 @@ const TopChessPlayers = (
                       foregroundStyle(textColor),
                     ]}
                   >
-                    {chessPlayer.rating}
+                    {chessPlayer.standardRating}
                   </Text>
 
                   <Text

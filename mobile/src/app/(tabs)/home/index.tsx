@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/colors";
 import TopChessPlayers from "@/components/TopChessPlayers";
-import { ChessPlayer } from "@/api/chess";
+import { ChessPlayer } from "@/lib/api";
 import { router, Stack } from "expo-router";
 import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
 } from "@/components/ChessPlayerCard";
-import { useChessPlayers, useWorldChampions } from "@/hooks/chess";
+import { useChessPlayers, useWorldChampions } from "@/hooks/useChessQueries";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,8 +42,8 @@ export default function Home() {
 
     const widgetChessPlayers = chessPlayers.slice(0, 25).map((chessPlayer) => ({
       name: chessPlayer.name,
-      rating: chessPlayer.rating,
-      livePos: chessPlayer.livePos,
+      standardRating: chessPlayer.standardRating,
+      standardRank: chessPlayer.standardRank,
       imageUrl:
         chessPlayer.imageUrl !== null
           ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}`
@@ -97,21 +97,34 @@ export default function Home() {
     }
 
     if (filterOption === "live") {
-      result = result.filter((c) => c.live);
+      result = result.filter(
+        (c) =>
+          c.hasLiveStandardGame || c.hasLiveRapidGame || c.hasLiveBlitzGame,
+      );
     } else if (filterOption === "rated-above-2700") {
-      result = result.filter((c) => c.rating >= 2700);
+      result = result.filter((c) => c.standardRating >= 2700);
+    } else if (filterOption === "top-100") {
+      result = result.filter((c) => c.standardRank <= 100);
     }
 
-    if (sortOption === "rating-ascending") {
-      result = [...result].sort((a, b) => a.rating - b.rating);
+    if (sortOption === "world-rank-descending") {
+      result = [...result].sort((a, b) => b.standardRank - a.standardRank);
     } else if (sortOption === "rating-change-descending") {
-      result = [...result].sort((a, b) => b.ratingDiff - a.ratingDiff);
+      result = [...result].sort(
+        (a, b) => b.standardMonthRatingChange - a.standardMonthRatingChange,
+      );
     } else if (sortOption === "rating-change-ascending") {
-      result = [...result].sort((a, b) => a.ratingDiff - b.ratingDiff);
+      result = [...result].sort(
+        (a, b) => a.standardMonthRatingChange - b.standardMonthRatingChange,
+      );
     } else if (sortOption === "ranking-change-descending") {
-      result = [...result].sort((a, b) => b.posChangeValue - a.posChangeValue);
+      result = [...result].sort(
+        (a, b) => b.standardMonthRankChange - a.standardMonthRankChange,
+      );
     } else if (sortOption === "ranking-change-ascending") {
-      result = [...result].sort((a, b) => a.posChangeValue - b.posChangeValue);
+      result = [...result].sort(
+        (a, b) => a.standardMonthRankChange - b.standardMonthRankChange,
+      );
     } else if (sortOption === "country") {
       result = [...result].sort((a, b) =>
         a.countryName.localeCompare(b.countryName),

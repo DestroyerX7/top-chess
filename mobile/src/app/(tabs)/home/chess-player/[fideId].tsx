@@ -1,20 +1,22 @@
 import {
   ExternalPathString,
   Link,
+  router,
   Stack,
   useLocalSearchParams,
 } from "expo-router";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
-import { flagStringToEmoji } from "@/utils/flags";
+import { flagStringToEmoji } from "@/lib/flags";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
-import { useChessPlayer, useWorldChampions } from "@/hooks/chess";
+import { useChessPlayer, useWorldChampions } from "@/hooks/useChessQueries";
 import { spacings } from "@/constants/spacings";
 import { fontSizes, lineHeights } from "@/constants/fonts";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
+import { useEffect } from "react";
 
 function StatRow({
   label,
@@ -149,15 +151,26 @@ export default function ChessPlayerPage() {
   const localSearchParams = useLocalSearchParams<{ fideId: string }>();
   const fideId = Number(localSearchParams.fideId);
 
-  const { data: chessPlayer, isPending, error } = useChessPlayer(fideId);
+  const { data: chessPlayer, isPending } = useChessPlayer(fideId);
 
   const { data: worldChampions } = useWorldChampions();
 
   const classicWorldChampion = worldChampions?.men.classic[0];
 
+  useEffect(() => {
+    if (chessPlayer === null && !isPending) {
+      router.back();
+    }
+  }, [chessPlayer, isPending]);
+
   if (chessPlayer === null) {
     return;
   }
+
+  const hasLiveGame =
+    chessPlayer.hasLiveStandardGame ||
+    chessPlayer.hasLiveRapidGame ||
+    chessPlayer.hasLiveBlitzGame;
 
   return (
     <>
@@ -212,9 +225,9 @@ export default function ChessPlayerPage() {
                 </View>
               )}
 
-            {chessPlayer.live && (
+            {hasLiveGame && (
               <Text size="4xl" style={styles.liveText}>
-                🔴 Live
+                🔴 Playing Live
               </Text>
             )}
           </View>
@@ -231,24 +244,24 @@ export default function ChessPlayerPage() {
         <SectionCard title="Chess Rating">
           <StatRow
             label="Live Rating"
-            value={chessPlayer.rating}
-            delta={chessPlayer.ratingDiff}
+            value={chessPlayer.standardRating}
+            delta={chessPlayer.standardMonthRatingChange}
           />
 
           <StatRow
             label="Year Rating Change"
             value={
-              chessPlayer.yearAgoRatingChange === 0
-                ? chessPlayer.yearAgoRatingChange
+              chessPlayer.standardYearRatingChange === 0
+                ? chessPlayer.standardYearRatingChange
                 : ""
             }
-            delta={chessPlayer.yearAgoRatingChange}
+            delta={chessPlayer.standardYearRatingChange}
           />
 
           <StatRow
             label="World Rank"
-            value={`#${chessPlayer.livePos}`}
-            delta={chessPlayer.posChangeValue}
+            value={`#${chessPlayer.standardRank}`}
+            delta={chessPlayer.standardMonthRankChange}
             positiveSymbol="▲"
             negativeSymbol="▼"
           />
@@ -256,16 +269,19 @@ export default function ChessPlayerPage() {
           <StatRow
             label="Year Ranking Change"
             value={
-              chessPlayer.yearAgoRankingChange === 0
-                ? chessPlayer.yearAgoRankingChange
+              chessPlayer.standardYearRankChange === 0
+                ? chessPlayer.standardYearRankChange
                 : ""
             }
-            delta={chessPlayer.yearAgoRankingChange}
+            delta={chessPlayer.standardYearRankChange}
             positiveSymbol="▲"
             negativeSymbol="▼"
           />
 
-          <StatRow label="Recent Games" value={chessPlayer.gamesCount} />
+          <StatRow
+            label="Recent Games"
+            value={chessPlayer.recentStandardGamesCount}
+          />
 
           <StatRow label="FIDE ID" value={chessPlayer.fideId} />
         </SectionCard>
@@ -278,7 +294,12 @@ export default function ChessPlayerPage() {
           />
 
           {chessPlayer.birthday !== null && (
-            <StatRow label="Birthday" value={chessPlayer.birthday} />
+            <StatRow
+              label="Birthday"
+              value={new Date(
+                `${chessPlayer.birthday}T00:00:00`,
+              ).toLocaleDateString()}
+            />
           )}
 
           <StatRow label="Age" value={chessPlayer.age} />
@@ -287,21 +308,22 @@ export default function ChessPlayerPage() {
         {/* Achievements */}
         <SectionCard title="Achievements">
           <Text style={styles.achievementText}>
-            {chessPlayer.bestRatingTitle}
+            {chessPlayer.standardBestRatingTitle}
           </Text>
 
-          <Text style={styles.achievementText}>{chessPlayer.bestPosTitle}</Text>
+          <Text style={styles.achievementText}>
+            {chessPlayer.standardBestRankTitle}
+          </Text>
         </SectionCard>
 
         {/* Chart */}
-        {chessPlayer.ratingHistory !== null && (
-          <RatingHistoryChart
-            ratingHistory={[
-              ...chessPlayer.ratingHistory,
-              Math.round(chessPlayer.rating),
-            ]}
-          />
-        )}
+
+        <RatingHistoryChart
+          ratingHistory={[
+            ...chessPlayer.standardRatingHistory,
+            Math.round(chessPlayer.standardRating),
+          ]}
+        />
 
         {/* Bio */}
         {chessPlayer.bio !== null && (
@@ -327,6 +349,15 @@ export default function ChessPlayerPage() {
             Read on Wikipedia →
           </Link>
         )}
+
+        {/* FIDE link */}
+        <Link
+          href={`https://ratings.fide.com/profile/${chessPlayer.fideId}`}
+          target="_blank"
+          style={styles.fideLink}
+        >
+          View FIDE profile →
+        </Link>
       </ScrollView>
     </>
   );
@@ -453,6 +484,12 @@ const styles = StyleSheet.create({
   // Wikipedia
   wikiLink: {
     color: colors.primary,
+    fontWeight: "600",
+  },
+
+  // FIDE
+  fideLink: {
+    color: colors.mutedForeground,
     fontWeight: "600",
   },
 });

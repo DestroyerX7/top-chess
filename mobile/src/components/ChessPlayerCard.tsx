@@ -1,6 +1,6 @@
-import { ChessPlayer } from "@/api/chess";
+import { ChessPlayer } from "@/lib/api";
 import { colors } from "@/constants/colors";
-import { flagStringToEmoji } from "@/utils/flags";
+import { flagStringToEmoji } from "@/lib/flags";
 import React, { useCallback } from "react";
 import {
   Pressable,
@@ -46,10 +46,12 @@ const ChessPlayerCard = React.memo(
     }));
 
     const handlePressIn = () => {
+      // eslint-disable-next-line react-hooks/immutability
       scale.value = withSpring(0.95);
     };
 
     const handlePressOut = () => {
+      // eslint-disable-next-line react-hooks/immutability
       scale.value = withSpring(1);
     };
 
@@ -70,23 +72,23 @@ const ChessPlayerCard = React.memo(
           <View style={styles.row}>
             <View style={styles.column}>
               <Text style={[styles.bold, styles.textShadow]}>
-                #{chessPlayer.livePos}
+                #{chessPlayer.standardRank}
               </Text>
 
-              {chessPlayer.posChangeValue !== 0 && (
+              {chessPlayer.standardMonthRankChange !== 0 && (
                 <Text
                   style={[
                     {
                       color:
-                        chessPlayer.posChangeValue > 0
+                        chessPlayer.standardMonthRankChange > 0
                           ? colors.primary
                           : colors.destructive,
                     },
                     styles.textShadow,
                   ]}
                 >
-                  {chessPlayer.posChangeValue > 0 ? "▲" : "▼"}
-                  {Math.abs(chessPlayer.posChangeValue)}
+                  {chessPlayer.standardMonthRankChange > 0 ? "▲" : "▼"}
+                  {Math.abs(chessPlayer.standardMonthRankChange)}
                 </Text>
               )}
             </View>
@@ -106,7 +108,9 @@ const ChessPlayerCard = React.memo(
               />
             )}
 
-            {chessPlayer.live && (
+            {(chessPlayer.hasLiveStandardGame ||
+              chessPlayer.hasLiveRapidGame ||
+              chessPlayer.hasLiveBlitzGame) && (
               <Text
                 style={[
                   styles.bold,
@@ -122,23 +126,23 @@ const ChessPlayerCard = React.memo(
 
             <View style={styles.ratingRow}>
               <Text style={[styles.bold, styles.textShadow]}>
-                {chessPlayer.rating}
+                {chessPlayer.standardRating}
               </Text>
 
-              {chessPlayer.ratingDiff !== 0 && (
+              {chessPlayer.standardMonthRatingChange !== 0 && (
                 <Text
                   style={[
                     {
                       color:
-                        chessPlayer.ratingDiff > 0
+                        chessPlayer.standardMonthRatingChange > 0
                           ? colors.primary
                           : colors.destructive,
                     },
                     styles.textShadow,
                   ]}
                 >
-                  {chessPlayer.ratingDiff > 0 && "+"}
-                  {chessPlayer.ratingDiff}
+                  {chessPlayer.standardMonthRatingChange > 0 && "+"}
+                  {chessPlayer.standardMonthRatingChange}
                 </Text>
               )}
             </View>
@@ -251,4 +255,5 @@ const styles = StyleSheet.create({
   },
 });
 
+ChessPlayerCard.displayName = "ChessPlayerCard";
 export default ChessPlayerCard;

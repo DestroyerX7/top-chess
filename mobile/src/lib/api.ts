@@ -3,26 +3,46 @@ import axios from "axios";
 export type ChessPlayer = {
   fideId: number;
   name: string;
+  age: number;
   flag: string;
   countryName: string;
-  rating: number;
-  livePos: number;
-  ratingDiff: number;
-  posChangeValue: number;
-  yearAgoRatingChange: number;
-  yearAgoRankingChange: number;
-  gamesCount: number;
-  age: number;
   birthday: string | null;
-  bestPosTitle: string;
-  bestRatingTitle: string;
-  live: boolean;
-  lastUpdatedGmt: string;
-  imageUrl: string | null;
+  standardRating: number;
+  rapidRating: number | null;
+  blitzRating: number | null;
+  rapidRatingInactive: boolean;
+  blitzRatingInactive: boolean;
+  standardRank: number;
+  rapidRank: number | null;
+  blitzRank: number | null;
+  standardJuniorRank: number | null;
+  rapidJuniorRank: number | null;
+  blitzJuniorRank: number | null;
+  standardU16Rank: number | null;
+  rapidU16Rank: number | null;
+  blitzU16Rank: number | null;
+  standardBestRankTitle: string;
+  standardBestRatingTitle: string;
+  rapidBestRatingTitle: string | null;
+  blitzBestRatingTitle: string | null;
+  standardMonthRatingChange: number;
+  standardMonthRankChange: number;
+  standardYearRatingChange: number;
+  standardYearRankChange: number;
+  standardRatingHistory: number[];
+  hasLiveStandardGame: boolean;
+  hasLiveRapidGame: boolean;
+  hasLiveBlitzGame: boolean;
+  recentStandardGamesCount: number;
+  recentRapidGamesCount: number;
+  recentBlitzGamesCount: number;
+  standardLastUpdate: string | null;
+  rapidLastUpdate: string | null;
+  blitzLastUpdate: string | null;
   wikipediaUrl: string | null;
+  imageUrl: string | null;
   bio: string | null;
   description: string | null;
-  ratingHistory: number[] | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -86,7 +106,7 @@ type WorldChampions = {
 
 export async function getTopChessPlayers() {
   const response = await axios.get<ChessPlayer[]>(
-    "https://top-chess.destroyerinc.workers.dev/get-top-chess-players",
+    "https://top-chess.destroyerinc.workers.dev/get-top-chess-players-updated",
   );
 
   return response.data;
@@ -94,7 +114,7 @@ export async function getTopChessPlayers() {
 
 export async function getChessPlayer(fideId: number | string) {
   const response = await axios.get<ChessPlayer | null>(
-    `https://top-chess.destroyerinc.workers.dev/get-chess-player/${fideId}`,
+    `https://top-chess.destroyerinc.workers.dev/get-chess-player-updated/${fideId}`,
   );
 
   return response.data;

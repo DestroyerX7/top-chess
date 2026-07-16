@@ -21,14 +21,14 @@ export default function HomeLayout() {
           sheetGrabberVisible: true,
           sheetLargestUndimmedDetentIndex: 1,
           headerTitleStyle: {
-            color: colorScheme == "dark" ? colors.foreground : "black",
+            color: colorScheme === "dark" ? colors.foreground : "black",
           },
           headerRight: () => (
             <Pressable onPress={() => router.back()} hitSlop={8}>
               <Ionicons
                 name="close"
                 size={24}
-                color={colorScheme == "dark" ? colors.foreground : "black"}
+                color={colorScheme === "dark" ? colors.foreground : "black"}
               />
             </Pressable>
           ),

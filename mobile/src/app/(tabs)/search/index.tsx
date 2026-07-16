@@ -1,20 +1,22 @@
-import { ScrollView, StyleSheet, View } from "react-native";
-import { router, Stack, useFocusEffect } from "expo-router";
-import { colors } from "@/constants/colors";
-import { useCallback, useState } from "react";
 import {
-  ChessPlayer,
-  searchChessPlayer,
-  LichessSearchResult,
-} from "@/api/chess";
-import { flagStringToEmoji, getCountryInfo } from "@/utils/flags";
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import { router, Stack } from "expo-router";
+import { colors } from "@/constants/colors";
+import { useCallback, useMemo, useState } from "react";
+import { searchChessPlayer, LichessSearchResult } from "@/lib/api";
+import { flagStringToEmoji, getCountryInfo } from "@/lib/flags";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
 import ChessPlayerCard from "@/components/ChessPlayerCard";
-import { useChessPlayers } from "@/hooks/chess";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
+import { useChessPlayers } from "@/hooks/useChessQueries";
 
 type Segment = {
   text: string;
@@ -225,20 +227,64 @@ const quotes: Quote[] = [
   },
 ];
 
+// Simple seeded PRNG (mulberry32)
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function sampleN<T>(arr: T[], n: number, seed: number): T[] {
+  const rand = mulberry32(seed);
+  const copy = [...arr];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy.slice(0, n);
+}
+
+function useRandomSubset<T>(items: T[] | undefined, n: number) {
+  const [seed, setSeed] = useState(() => Date.now());
+
+  const randomItems = useMemo(() => {
+    if (items === undefined || items.length === 0) {
+      return [];
+    }
+
+    return sampleN(items, Math.min(n, items.length), seed); // seed now used ✅
+  }, [items, n, seed]);
+
+  const randomize = useCallback(() => setSeed(Date.now()), []);
+
+  return { randomItems, randomize };
+}
+
 export default function Search() {
   const [searchResults, setSearchResults] = useState<
     LichessSearchResult[] | null
   >(null);
   const [loading, setLoading] = useState(false);
 
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [selectedChessPlayers, setSelectedChessPlayers] = useState<
-    ChessPlayer[]
-  >([]);
+  const { data: chessPlayers, refetch, isStale } = useChessPlayers();
 
-  const { data: chessPlayers } = useChessPlayers();
+  const { randomItems: displayedChessPlayers, randomize } = useRandomSubset(
+    chessPlayers,
+    4,
+  );
+  const [quote, setQuote] = useState(
+    () => quotes[Math.floor(Math.random() * quotes.length)],
+  );
 
-  const search = async (searchInput: string) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+
+  const search = async () => {
     try {
       const trimmedSearchInput = searchInput.trim();
 
@@ -258,19 +304,40 @@ export default function Search() {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  const handleRefresh = async () => {
+    if (isRefreshing) {
+      return;
+    }
 
-      const randomChessPlayers =
-        chessPlayers !== undefined
-          ? [...chessPlayers].sort(() => Math.random() - 0.5).slice(0, 4)
-          : [];
+    try {
+      setIsRefreshing(true);
 
-      setQuote(randomQuote);
-      setSelectedChessPlayers(randomChessPlayers);
-    }, [chessPlayers]),
-  );
+      const trimmedSearchInput = searchInput.trim();
+
+      if (trimmedSearchInput.length < 1) {
+        await new Promise<void>((resolve) => {
+          setTimeout(async () => {
+            if (isStale) {
+              await refetch();
+            }
+
+            randomize();
+            setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+
+            resolve();
+          }, 200);
+        });
+
+        return;
+      }
+
+      search();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <>
@@ -280,8 +347,9 @@ export default function Search() {
           title: "Search",
           headerSearchBarOptions: {
             placeholder: "Search by name or FIDE ID",
-            onSearchButtonPress: (e) => search(e.nativeEvent.text),
+            onSearchButtonPress: search,
             onCancelButtonPress: () => setSearchResults(null),
+            onChangeText: (e) => setSearchInput(e.nativeEvent.text),
             hideWhenScrolling: false,
           },
         }}
@@ -291,6 +359,9 @@ export default function Search() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
       >
         {!loading && searchResults === null && (
           <Text size="lg" style={styles.emptySearchResultsText}>
@@ -298,8 +369,30 @@ export default function Search() {
           </Text>
         )}
 
-        {!loading &&
-          searchResults?.map((searchResult) => {
+        {loading && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacings.md,
+            }}
+          >
+            <ActivityIndicator color={colors.foreground} />
+
+            <Text size="lg" style={styles.emptySearchResultsText}>
+              Loading...
+            </Text>
+          </View>
+        )}
+
+        {!loading && searchResults !== null && searchResults.length === 0 && (
+          <Text size="lg" style={styles.emptySearchResultsText}>
+            No results found
+          </Text>
+        )}
+
+        {searchResults !== null &&
+          searchResults.map((searchResult) => {
             const countryInfo = getCountryInfo(searchResult.federation);
             const isRated =
               searchResult.standard !== undefined ||
@@ -436,22 +529,10 @@ export default function Search() {
             );
           })}
 
-        {!loading && searchResults !== null && searchResults.length === 0 && (
-          <Text size="lg" style={styles.emptySearchResultsText}>
-            No results found
-          </Text>
-        )}
-
-        {loading && (
-          <Text size="lg" style={styles.emptySearchResultsText}>
-            Loading...
-          </Text>
-        )}
-
         {(searchResults === null || searchResults.length === 0) && (
           <View style={{ gap: 16 }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {selectedChessPlayers.map((chessPlayer) => (
+              {displayedChessPlayers.map((chessPlayer) => (
                 <ChessPlayerCard
                   key={chessPlayer.fideId}
                   style={styles.chessPlayerCardContainer}
@@ -469,7 +550,7 @@ export default function Search() {
             {quote !== null && (
               <View style={styles.quoteContainer}>
                 <Text style={styles.quoteSegmentText}>
-                  "
+                  &quot;
                   {quote.segments.map((segment, i) => (
                     <Text
                       key={i}
@@ -482,7 +563,7 @@ export default function Search() {
                       {segment.text}
                     </Text>
                   ))}
-                  "
+                  &quot;
                 </Text>
 
                 <Text size="sm" style={styles.quoteAuthorText}>

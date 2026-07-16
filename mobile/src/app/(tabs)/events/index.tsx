@@ -1,44 +1,48 @@
 import { colors } from "@/constants/colors";
 import { spacings } from "@/constants/spacings";
-import { useDailyGames } from "@/hooks/chess";
+import { useDailyGames } from "@/hooks/useChessQueries";
 import { Stack } from "expo-router";
 import {
   View,
   ScrollView,
   StyleSheet,
   RefreshControl,
-  Animated,
   Pressable,
   StyleProp,
   ViewStyle,
 } from "react-native";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 function Skeleton({ style }: { style?: StyleProp<ViewStyle> }) {
-  const opacity = useRef(new Animated.Value(0.75)).current;
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 750,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.75,
-          duration: 750,
-          useNativeDriver: true,
-        }),
-      ]),
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.75, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
     );
-    animation.start();
-    return () => animation.stop();
   }, [opacity]);
 
-  return <Animated.View style={[styles.skeletonBase, style, { opacity }]} />;
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return <Animated.View style={[styles.skeletonBase, animatedStyle, style]} />;
 }
 
 function RoundCardSkeleton({ numGames = 3 }: { numGames?: number }) {
@@ -116,7 +120,7 @@ export default function Events() {
       ) : error !== null ? (
         <View style={styles.errorContainer}>
           <Text size="xl" style={styles.errorTitle}>
-            Couldn't load events
+            Couldn&apos;t load events
           </Text>
 
           <Text style={styles.errorMessage}>
@@ -149,80 +153,132 @@ export default function Events() {
             />
           }
         >
-          {Object.entries(dailyGames)
-            .sort(([aDateString], [bDateString]) =>
-              bDateString.localeCompare(aDateString),
-            )
-            .map(([dateString, daySchedule]) => {
-              const [year, month, day] = dateString.split("-").map(Number);
-              const localeDateString = new Date(
-                year,
-                month - 1,
-                day,
-              ).toLocaleDateString();
+          {Object.entries(dailyGames).length > 0 ? (
+            Object.entries(dailyGames)
+              .sort(([aDateString], [bDateString]) =>
+                bDateString.localeCompare(aDateString),
+              )
+              .map(([dateString, daySchedule]) => {
+                const [year, month, day] = dateString.split("-").map(Number);
+                const localeDateString = new Date(
+                  year,
+                  month - 1,
+                  day,
+                ).toLocaleDateString();
 
-              return (
-                <View key={dateString}>
-                  <Text size="xl" style={styles.date}>
-                    {localeDateString}
-                  </Text>
+                return (
+                  <View key={dateString}>
+                    <Text size="xl" style={styles.date}>
+                      {localeDateString}
+                    </Text>
 
-                  <View style={styles.dayScheduleContainer}>
-                    {Object.entries(daySchedule).map(
-                      ([tournamentName, tournament], i) => (
-                        <View key={i} style={styles.tounamentContainer}>
-                          {Object.entries(tournament.rounds).map(
-                            ([roundName, games]) => (
-                              <View key={roundName} style={styles.roundCard}>
-                                <View>
-                                  <Text size="xl" style={styles.tounamentName}>
-                                    {tournamentName}
-                                  </Text>
+                    <View style={styles.dayScheduleContainer}>
+                      {Object.entries(daySchedule).map(
+                        ([tournamentName, tournament], i) => (
+                          <View key={i} style={styles.tounamentContainer}>
+                            {Object.entries(tournament.rounds).map(
+                              ([roundName, games]) => (
+                                <View key={roundName} style={styles.roundCard}>
+                                  <View>
+                                    <Text
+                                      size="xl"
+                                      style={styles.tounamentName}
+                                    >
+                                      {tournamentName}
+                                    </Text>
 
-                                  <Text size="lg" style={styles.roundName}>
-                                    {roundName}
-                                  </Text>
+                                    <Text size="lg" style={styles.roundName}>
+                                      {roundName}
+                                    </Text>
 
-                                  <View style={styles.divider} />
+                                    <View style={styles.divider} />
 
-                                  <View style={styles.gameContainer}>
-                                    {games.map((game, j) => (
-                                      <View
-                                        key={game.id ?? j}
-                                        style={styles.game}
-                                      >
-                                        <Text style={styles.gamePlayerText}>
-                                          {game.player_1_display}
-                                        </Text>
-
-                                        <Text style={styles.gameResultText}>
-                                          {game.result.text.length > 0
-                                            ? game.result.text
-                                            : "vs"}
-                                        </Text>
-
-                                        <Text
-                                          style={[
-                                            styles.gamePlayerText,
-                                            styles.textAlignRight,
-                                          ]}
+                                    <View style={styles.gameContainer}>
+                                      {games.map((game, j) => (
+                                        <View
+                                          key={game.id ?? j}
+                                          style={styles.game}
                                         >
-                                          {game.player_2_display}
-                                        </Text>
-                                      </View>
-                                    ))}
+                                          <Text style={styles.gamePlayerText}>
+                                            {game.player_1_display}
+                                          </Text>
+
+                                          <Text style={styles.gameResultText}>
+                                            {game.result.text.length > 0
+                                              ? game.result.text
+                                              : "vs"}
+                                          </Text>
+
+                                          <Text
+                                            style={[
+                                              styles.gamePlayerText,
+                                              styles.textAlignRight,
+                                            ]}
+                                          >
+                                            {game.player_2_display}
+                                          </Text>
+                                        </View>
+                                      ))}
+                                    </View>
                                   </View>
                                 </View>
-                              </View>
-                            ),
-                          )}
-                        </View>
-                      ),
-                    )}
+                              ),
+                            )}
+                          </View>
+                        ),
+                      )}
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                padding: spacings.lg,
+                gap: spacings.md,
+              }}
+            >
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: borderRadius.lg,
+                  backgroundColor: colors.secondaryForeground,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={32}
+                  color={colors.secondary}
+                />
+              </View>
+
+              <Text
+                size="lg"
+                style={{
+                  fontWeight: "600",
+                }}
+              >
+                No events
+              </Text>
+
+              <Text
+                size="md"
+                style={{
+                  color: colors.mutedForeground,
+                  textAlign: "center",
+                }}
+              >
+                Recent and upcoming chess events will show up here once they are
+                scheduled.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       )}
     </>
