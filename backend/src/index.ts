@@ -247,10 +247,59 @@ app.get("/get-chess-player/:fideId", async (c) => {
 
     const [chessPlayer] = await db
       .select()
+      .from(dbChessPlayers)
+      .where(eq(dbChessPlayers.fideId, fideId));
+
+    if (chessPlayer === undefined) {
+      return c.json({ error: "Chess player not found" }, 404);
+    }
+
+    return c.json(chessPlayer);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Database fetch error:", error.message);
+    } else {
+      console.error("Database fetch error");
+    }
+
+    return c.json({ error: "Failed to get chess player" }, 500);
+  }
+});
+
+app.get("/get-chess-player-updated/:fideId", async (c) => {
+  try {
+    const fideIdParam = c.req.param("fideId");
+
+    if (!fideIdParam) {
+      return c.json({ error: "fideId param is required" }, 400);
+    }
+
+    const fideId = Number(fideIdParam);
+
+    if (isNaN(fideId) || !Number.isInteger(fideId)) {
+      return c.json({ error: "fideId must be an integer" }, 400);
+    }
+
+    if (!Number.isInteger(fideId)) {
+      return c.json(
+        { error: "fideId param must be provided as an integer" },
+        400,
+      );
+    }
+
+    const neonClient = neon(c.env.NEON_DATABASE_URL);
+    const db = drizzle(neonClient);
+
+    const [chessPlayer] = await db
+      .select()
       .from(dbTopChessPlayers)
       .where(eq(dbTopChessPlayers.fideId, fideId));
 
-    return c.json(chessPlayer ?? null);
+    if (chessPlayer === undefined) {
+      return c.json({ error: "Chess player not found" }, 404);
+    }
+
+    return c.json(chessPlayer);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Database fetch error:", error.message);
