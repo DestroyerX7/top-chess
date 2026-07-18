@@ -5,18 +5,18 @@ import {
   Stack,
   useLocalSearchParams,
 } from "expo-router";
-import { ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/lib/flags";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
 import { useChessPlayer, useWorldChampions } from "@/hooks/useChessQueries";
 import { spacings } from "@/constants/spacings";
 import { fontSizes, lineHeights } from "@/constants/fonts";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 
 function StatRow({
   label,
@@ -110,7 +110,7 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
   return (
     <View style={styles.chartContainer}>
       <Text size="sm" style={styles.cardTitle}>
-        Rating History
+        Standard Rating History
       </Text>
 
       <View style={styles.cardDivider} />
@@ -156,6 +156,10 @@ export default function ChessPlayerPage() {
   const { data: worldChampions } = useWorldChampions();
 
   const classicWorldChampion = worldChampions?.men.classic[0];
+
+  const [selectedTimeControl, setSelectedTimeControl] = useState<
+    "standard" | "rapid" | "blitz"
+  >("standard");
 
   useEffect(() => {
     if (chessPlayer === null && !isPending) {
@@ -216,7 +220,7 @@ export default function ChessPlayerPage() {
                     Current World Champion
                   </Text>
 
-                  <MaterialCommunityIcons
+                  <MaterialDesignIcons
                     name="crown"
                     size={24}
                     color="gold"
@@ -241,49 +245,210 @@ export default function ChessPlayerPage() {
         )}
 
         {/* Chess stats */}
-        <SectionCard title="Chess Rating">
-          <StatRow
-            label="Live Rating"
-            value={chessPlayer.standardRating}
-            delta={chessPlayer.standardMonthRatingChange}
-          />
+        <SectionCard title="Chess Ratings">
+          <View style={{ flexDirection: "row", gap: spacings.md }}>
+            <Pressable
+              style={({ pressed }) => [
+                {
+                  flex: 1,
+                  backgroundColor: colors.muted,
+                  padding: spacings.lg,
+                  alignItems: "center",
+                  borderRadius: borderRadius.md,
+                  borderWidth: 1,
+                  borderColor: "transparent",
+                },
+                selectedTimeControl === "standard" && {
+                  borderColor: colors.border,
+                },
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={() => setSelectedTimeControl("standard")}
+            >
+              <MaterialDesignIcons
+                name="chess-pawn"
+                size={32}
+                color={colors.primary}
+              />
 
-          <StatRow
-            label="Year Rating Change"
-            value={
-              chessPlayer.standardYearRatingChange === 0
-                ? chessPlayer.standardYearRatingChange
-                : ""
-            }
-            delta={chessPlayer.standardYearRatingChange}
-          />
+              <Text size="md" style={{ color: colors.mutedForeground }}>
+                Standard
+              </Text>
 
-          <StatRow
-            label="World Rank"
-            value={`#${chessPlayer.standardRank}`}
-            delta={chessPlayer.standardMonthRankChange}
-            positiveSymbol="▲"
-            negativeSymbol="▼"
-          />
+              <Text size="2xl" style={{ fontWeight: "700" }}>
+                {chessPlayer.standardRating}
+              </Text>
+            </Pressable>
 
-          <StatRow
-            label="Year Ranking Change"
-            value={
-              chessPlayer.standardYearRankChange === 0
-                ? chessPlayer.standardYearRankChange
-                : ""
-            }
-            delta={chessPlayer.standardYearRankChange}
-            positiveSymbol="▲"
-            negativeSymbol="▼"
-          />
+            <Pressable
+              style={({ pressed }) => [
+                {
+                  flex: 1,
+                  backgroundColor: colors.muted,
+                  padding: spacings.lg,
+                  alignItems: "center",
+                  borderRadius: borderRadius.md,
+                  borderWidth: 1,
+                  borderColor: "transparent",
+                },
+                selectedTimeControl === "rapid" && {
+                  borderColor: colors.border,
+                },
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={() => setSelectedTimeControl("rapid")}
+            >
+              <MaterialDesignIcons
+                name="timer"
+                size={32}
+                color={colors.accentForeground}
+              />
 
-          <StatRow
-            label="Recent Games"
-            value={chessPlayer.recentStandardGamesCount}
-          />
+              <Text size="md" style={{ color: colors.mutedForeground }}>
+                Rapid
+              </Text>
 
-          <StatRow label="FIDE ID" value={chessPlayer.fideId} />
+              <Text size="2xl" style={{ fontWeight: "700" }}>
+                {chessPlayer.rapidRating ?? "Unrated"}
+              </Text>
+
+              {chessPlayer.rapidRatingInactive && (
+                <Text style={{ color: "#e00000" }}>Inactive</Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                {
+                  flex: 1,
+                  backgroundColor: colors.muted,
+                  padding: spacings.lg,
+                  alignItems: "center",
+                  borderRadius: borderRadius.md,
+                  borderWidth: 1,
+                  borderColor: "transparent",
+                },
+                selectedTimeControl === "blitz" && {
+                  borderColor: colors.border,
+                },
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={() => setSelectedTimeControl("blitz")}
+            >
+              <MaterialDesignIcons
+                name="lightning-bolt"
+                size={32}
+                color="#ffee00"
+              />
+
+              <Text size="md" style={{ color: colors.mutedForeground }}>
+                Blitz
+              </Text>
+
+              <Text size="2xl" style={{ fontWeight: "700" }}>
+                {chessPlayer.blitzRating ?? "Unrated"}
+              </Text>
+
+              {chessPlayer.blitzRatingInactive && (
+                <Text style={{ color: "#e00000" }}>Inactive</Text>
+              )}
+            </Pressable>
+          </View>
+
+          {selectedTimeControl === "standard" ? (
+            <>
+              <StatRow
+                label="Standard Rating"
+                value={chessPlayer.standardRating}
+                delta={chessPlayer.standardMonthRatingChange}
+              />
+
+              <StatRow
+                label="Year Rating Change"
+                value={
+                  chessPlayer.standardYearRatingChange === 0
+                    ? chessPlayer.standardYearRatingChange
+                    : ""
+                }
+                delta={chessPlayer.standardYearRatingChange}
+              />
+
+              <StatRow
+                label="World Rank"
+                value={`#${chessPlayer.standardRank}`}
+                delta={chessPlayer.standardMonthRankChange}
+                positiveSymbol="▲"
+                negativeSymbol="▼"
+              />
+
+              <StatRow
+                label="Year Ranking Change"
+                value={
+                  chessPlayer.standardYearRankChange === 0
+                    ? chessPlayer.standardYearRankChange
+                    : ""
+                }
+                delta={chessPlayer.standardYearRankChange}
+                positiveSymbol="▲"
+                negativeSymbol="▼"
+              />
+
+              <StatRow
+                label="Recent Games"
+                value={chessPlayer.recentStandardGamesCount}
+              />
+            </>
+          ) : selectedTimeControl === "rapid" ? (
+            <>
+              <StatRow
+                label="Rapid Rating"
+                value={chessPlayer.rapidRating ?? "Unrated"}
+              />
+
+              <StatRow
+                label="World Rank"
+                value={
+                  chessPlayer.rapidRank !== null
+                    ? `#${chessPlayer.rapidRank}`
+                    : "Unranked"
+                }
+              />
+
+              {chessPlayer.rapidRatingInactive && (
+                <StatRow label="Status" value="Inactive" />
+              )}
+
+              <StatRow
+                label="Recent Games"
+                value={chessPlayer.recentRapidGamesCount}
+              />
+            </>
+          ) : (
+            <>
+              <StatRow
+                label="Blitz Rating"
+                value={chessPlayer.blitzRating ?? "Unrated"}
+              />
+
+              <StatRow
+                label="World Rank"
+                value={
+                  chessPlayer.blitzRank !== null
+                    ? `#${chessPlayer.blitzRank}`
+                    : "Unranked"
+                }
+              />
+
+              {chessPlayer.blitzRatingInactive && (
+                <StatRow label="Status" value="Inactive" />
+              )}
+
+              <StatRow
+                label="Recent Games"
+                value={chessPlayer.recentBlitzGamesCount}
+              />
+            </>
+          )}
         </SectionCard>
 
         {/* About */}
@@ -303,21 +468,34 @@ export default function ChessPlayerPage() {
           )}
 
           <StatRow label="Age" value={chessPlayer.age} />
+
+          <StatRow label="FIDE ID" value={chessPlayer.fideId} />
         </SectionCard>
 
         {/* Achievements */}
         <SectionCard title="Achievements">
           <Text style={styles.achievementText}>
-            {chessPlayer.standardBestRatingTitle}
+            {chessPlayer.standardBestRankTitle}
           </Text>
 
           <Text style={styles.achievementText}>
-            {chessPlayer.standardBestRankTitle}
+            {chessPlayer.standardBestRatingTitle}
           </Text>
+
+          {chessPlayer.rapidBestRatingTitle !== null && (
+            <Text style={styles.achievementText}>
+              {chessPlayer.rapidBestRatingTitle}
+            </Text>
+          )}
+
+          {chessPlayer.blitzBestRatingTitle !== null && (
+            <Text style={styles.achievementText}>
+              {chessPlayer.blitzBestRatingTitle}
+            </Text>
+          )}
         </SectionCard>
 
         {/* Chart */}
-
         <RatingHistoryChart
           ratingHistory={[
             ...chessPlayer.standardRatingHistory,

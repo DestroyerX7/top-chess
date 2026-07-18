@@ -15,7 +15,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import { Image } from "expo-image";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
@@ -100,7 +100,7 @@ const ChessPlayerCard = React.memo(
 
           <View style={styles.bottom}>
             {isWorldChampion && (
-              <MaterialCommunityIcons
+              <MaterialDesignIcons
                 name="crown"
                 size={32}
                 color="gold"

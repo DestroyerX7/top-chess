@@ -14,7 +14,7 @@ import {
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
 import { useEffect } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import Animated, {
   Easing,
   useAnimatedStyle,

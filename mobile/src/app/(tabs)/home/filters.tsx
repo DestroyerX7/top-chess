@@ -1,11 +1,11 @@
 import { ScrollView, Pressable, StyleSheet, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import Text from "@/components/Text";
 import { spacings } from "@/constants/spacings";
 import { colors } from "@/constants/colors";
 import { SortOption, useFilterStore } from "@/hooks/useFilterStore";
 import { borderRadius } from "@/constants/borders";
-import Octicons from "@expo/vector-icons/Octicons";
+import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 
 const filterOptions = [
   { value: "all", label: "All" },
@@ -137,16 +137,16 @@ export default function FiltersModal() {
               </Text>
 
               {option.desc !== null && sortOption === option.asc && (
-                <Octicons
-                  name="sort-asc"
+                <MaterialDesignIcons
+                  name="sort-ascending"
                   size={16}
                   color={colors.mutedForeground}
                 />
               )}
 
               {option.asc !== null && sortOption === option.desc && (
-                <Octicons
-                  name="sort-desc"
+                <MaterialDesignIcons
+                  name="sort-descending"
                   size={16}
                   color={colors.mutedForeground}
                 />

@@ -10,13 +10,13 @@ import { colors } from "@/constants/colors";
 import { useCallback, useMemo, useState } from "react";
 import { searchChessPlayer, LichessSearchResult } from "@/lib/api";
 import { flagStringToEmoji, getCountryInfo } from "@/lib/flags";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import { Image } from "expo-image";
 import ChessPlayerCard from "@/components/ChessPlayerCard";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
-import { useChessPlayers } from "@/hooks/useChessQueries";
+import { useTopChessPlayers } from "@/hooks/useChessQueries";
 
 type Segment = {
   text: string;
@@ -271,10 +271,10 @@ export default function Search() {
   >(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: chessPlayers, refetch, isStale } = useChessPlayers();
+  const { data: topChessPlayers, refetch, isStale } = useTopChessPlayers();
 
   const { randomItems: displayedChessPlayers, randomize } = useRandomSubset(
-    chessPlayers,
+    topChessPlayers,
     4,
   );
   const [quote, setQuote] = useState(
@@ -469,7 +469,7 @@ export default function Search() {
                     {searchResult.standard !== undefined && (
                       <View style={styles.ratingCardContainer}>
                         <View style={styles.ratingCard}>
-                          <MaterialCommunityIcons
+                          <MaterialDesignIcons
                             name="chess-pawn"
                             size={32}
                             color={colors.primary}
@@ -487,7 +487,7 @@ export default function Search() {
                     {searchResult.rapid !== undefined && (
                       <View style={styles.ratingCardContainer}>
                         <View style={styles.ratingCard}>
-                          <MaterialCommunityIcons
+                          <MaterialDesignIcons
                             name="timer"
                             size={32}
                             color={colors.accentForeground}
@@ -505,7 +505,7 @@ export default function Search() {
                     {searchResult.blitz !== undefined && (
                       <View style={styles.ratingCardContainer}>
                         <View style={styles.ratingCard}>
-                          <MaterialCommunityIcons
+                          <MaterialDesignIcons
                             name="lightning-bolt"
                             size={32}
                             color="#ffee00"

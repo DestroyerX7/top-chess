@@ -7,11 +7,11 @@ import { router, Stack } from "expo-router";
 import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
 } from "@/components/ChessPlayerCard";
-import { useChessPlayers, useWorldChampions } from "@/hooks/useChessQueries";
+import { useTopChessPlayers, useWorldChampions } from "@/hooks/useChessQueries";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
-import { Ionicons } from "@expo/vector-icons";
 import { useFilterStore } from "@/hooks/useFilterStore";
+import Ionicons from "@react-native-vector-icons/ionicons";
 
 const fideLogoUrl =
   "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
@@ -20,13 +20,13 @@ const skeletonData = Array(10).fill(null);
 
 export default function Home() {
   const {
-    data: chessPlayers,
+    data: topChessPlayers,
     isPending,
     error,
     refetch,
     isStale,
     isRefetching,
-  } = useChessPlayers();
+  } = useTopChessPlayers();
 
   const { data: worldChampions } = useWorldChampions();
   const classicWorldChampion = worldChampions?.men.classic[0];
@@ -36,24 +36,26 @@ export default function Home() {
   const { filterOption, sortOption } = useFilterStore();
 
   useEffect(() => {
-    if (chessPlayers === undefined) {
+    if (topChessPlayers === undefined) {
       return;
     }
 
-    const widgetChessPlayers = chessPlayers.slice(0, 25).map((chessPlayer) => ({
-      name: chessPlayer.name,
-      standardRating: chessPlayer.standardRating,
-      standardRank: chessPlayer.standardRank,
-      imageUrl:
-        chessPlayer.imageUrl !== null
-          ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}`
-          : fideLogoUrl,
-    }));
+    const widgetChessPlayers = topChessPlayers
+      .slice(0, 25)
+      .map((chessPlayer) => ({
+        name: chessPlayer.name,
+        standardRating: chessPlayer.standardRating,
+        standardRank: chessPlayer.standardRank,
+        imageUrl:
+          chessPlayer.imageUrl !== null
+            ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}`
+            : fideLogoUrl,
+      }));
 
     TopChessPlayers.updateSnapshot({
       widgetChessPlayers,
     });
-  }, [chessPlayers]);
+  }, [topChessPlayers]);
 
   const handlePress = useCallback((fideId: number) => {
     router.push({
@@ -83,11 +85,11 @@ export default function Home() {
   );
 
   const shownChessPlayers = useMemo(() => {
-    if (chessPlayers === undefined) {
+    if (topChessPlayers === undefined) {
       return [];
     }
 
-    let result = chessPlayers;
+    let result = topChessPlayers;
 
     const trimmedSearchInput = searchInput.trim().toLowerCase();
     if (trimmedSearchInput.length > 0) {
@@ -138,7 +140,7 @@ export default function Home() {
     }
 
     return result;
-  }, [chessPlayers, searchInput, filterOption, sortOption]);
+  }, [topChessPlayers, searchInput, filterOption, sortOption]);
 
   const listEmptyComponent = useMemo(
     () =>
