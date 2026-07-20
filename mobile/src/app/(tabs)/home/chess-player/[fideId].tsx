@@ -249,15 +249,7 @@ export default function ChessPlayerPage() {
           <View style={{ flexDirection: "row", gap: spacings.md }}>
             <Pressable
               style={({ pressed }) => [
-                {
-                  flex: 1,
-                  backgroundColor: colors.muted,
-                  padding: spacings.lg,
-                  alignItems: "center",
-                  borderRadius: borderRadius.md,
-                  borderWidth: 1,
-                  borderColor: "transparent",
-                },
+                styles.ratingCard,
                 selectedTimeControl === "standard" && {
                   borderColor: colors.border,
                 },
@@ -282,15 +274,7 @@ export default function ChessPlayerPage() {
 
             <Pressable
               style={({ pressed }) => [
-                {
-                  flex: 1,
-                  backgroundColor: colors.muted,
-                  padding: spacings.lg,
-                  alignItems: "center",
-                  borderRadius: borderRadius.md,
-                  borderWidth: 1,
-                  borderColor: "transparent",
-                },
+                styles.ratingCard,
                 selectedTimeControl === "rapid" && {
                   borderColor: colors.border,
                 },
@@ -319,15 +303,7 @@ export default function ChessPlayerPage() {
 
             <Pressable
               style={({ pressed }) => [
-                {
-                  flex: 1,
-                  backgroundColor: colors.muted,
-                  padding: spacings.lg,
-                  alignItems: "center",
-                  borderRadius: borderRadius.md,
-                  borderWidth: 1,
-                  borderColor: "transparent",
-                },
+                styles.ratingCard,
                 selectedTimeControl === "blitz" && {
                   borderColor: colors.border,
                 },
@@ -669,5 +645,15 @@ const styles = StyleSheet.create({
   fideLink: {
     color: colors.mutedForeground,
     fontWeight: "600",
+  },
+
+  ratingCard: {
+    flex: 1,
+    backgroundColor: colors.muted,
+    padding: spacings.lg,
+    alignItems: "center",
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
 });
