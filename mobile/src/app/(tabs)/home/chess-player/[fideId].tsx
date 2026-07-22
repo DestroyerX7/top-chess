@@ -244,7 +244,7 @@ export default function ChessPlayerPage() {
           </Text>
         )}
 
-        {/* Chess stats */}
+        {/* Chess ratings */}
         <SectionCard title="Chess Ratings">
           <View style={{ flexDirection: "row", gap: spacings.md }}>
             <Pressable
@@ -292,13 +292,20 @@ export default function ChessPlayerPage() {
                 Rapid
               </Text>
 
-              <Text size="2xl" style={{ fontWeight: "700" }}>
+              <Text
+                size="2xl"
+                style={{
+                  fontWeight: "700",
+                  color:
+                    chessPlayer.rapidRating === null
+                      ? colors.mutedForeground
+                      : chessPlayer.rapidRatingInactive
+                        ? "#e00000"
+                        : colors.foreground,
+                }}
+              >
                 {chessPlayer.rapidRating ?? "Unrated"}
               </Text>
-
-              {chessPlayer.rapidRatingInactive && (
-                <Text style={{ color: "#e00000" }}>Inactive</Text>
-              )}
             </Pressable>
 
             <Pressable
@@ -321,13 +328,17 @@ export default function ChessPlayerPage() {
                 Blitz
               </Text>
 
-              <Text size="2xl" style={{ fontWeight: "700" }}>
+              <Text
+                size="2xl"
+                style={{
+                  fontWeight: "700",
+                  color: chessPlayer.blitzRatingInactive
+                    ? "#e00000"
+                    : colors.foreground,
+                }}
+              >
                 {chessPlayer.blitzRating ?? "Unrated"}
               </Text>
-
-              {chessPlayer.blitzRatingInactive && (
-                <Text style={{ color: "#e00000" }}>Inactive</Text>
-              )}
             </Pressable>
           </View>
 
@@ -390,14 +401,26 @@ export default function ChessPlayerPage() {
                 }
               />
 
-              {chessPlayer.rapidRatingInactive && (
-                <StatRow label="Status" value="Inactive" />
-              )}
-
               <StatRow
                 label="Recent Games"
                 value={chessPlayer.recentRapidGamesCount}
               />
+
+              {chessPlayer.rapidRatingInactive && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.mutedForeground }}>Status</Text>
+
+                  <Text style={{ fontWeight: "600", color: "#e00000" }}>
+                    Inactive
+                  </Text>
+                </View>
+              )}
             </>
           ) : (
             <>
@@ -415,14 +438,26 @@ export default function ChessPlayerPage() {
                 }
               />
 
-              {chessPlayer.blitzRatingInactive && (
-                <StatRow label="Status" value="Inactive" />
-              )}
-
               <StatRow
                 label="Recent Games"
                 value={chessPlayer.recentBlitzGamesCount}
               />
+
+              {chessPlayer.blitzRatingInactive && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.mutedForeground }}>Status</Text>
+
+                  <Text style={{ fontWeight: "600", color: "#e00000" }}>
+                    Inactive
+                  </Text>
+                </View>
+              )}
             </>
           )}
         </SectionCard>

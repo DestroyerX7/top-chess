@@ -199,6 +199,7 @@ export default function Home() {
           refetch();
         }}
         ListEmptyComponent={listEmptyComponent}
+        scrollEnabled={!isPending}
       />
     </>
   );

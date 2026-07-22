@@ -477,7 +477,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Standard</Text>
 
-                          <Text size="xl" style={styles.ratingText}>
+                          <Text size="2xl" style={styles.ratingText}>
                             {searchResult.standard}
                           </Text>
                         </View>
@@ -495,7 +495,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Rapid</Text>
 
-                          <Text size="xl" style={styles.ratingText}>
+                          <Text size="2xl" style={styles.ratingText}>
                             {searchResult.rapid}
                           </Text>
                         </View>
@@ -513,7 +513,7 @@ export default function Search() {
 
                           <Text style={styles.ratingFormatText}>Blitz</Text>
 
-                          <Text size="xl" style={styles.ratingText}>
+                          <Text size="2xl" style={styles.ratingText}>
                             {searchResult.blitz}
                           </Text>
                         </View>
@@ -521,7 +521,7 @@ export default function Search() {
                     )}
                   </View>
                 ) : (
-                  <Text size="xl" style={styles.ratingText}>
+                  <Text size="2xl" style={styles.ratingText}>
                     Unrated
                   </Text>
                 )}
@@ -614,23 +614,20 @@ const styles = StyleSheet.create({
   },
   ratingCardContainer: {
     flex: 1,
-    aspectRatio: 1,
     padding: spacings.sm,
     maxWidth: "33.33%",
   },
   ratingCard: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.secondary,
-    borderRadius: borderRadius.lg,
+    backgroundColor: colors.muted,
+    borderRadius: borderRadius.md,
+    padding: spacings.lg,
   },
   ratingFormatText: {
-    color: colors.secondaryForeground,
-    fontWeight: "700",
+    color: colors.mutedForeground,
   },
   ratingText: {
-    color: colors.cardForeground,
     fontWeight: "700",
   },
   chessPlayerCardContainer: {
