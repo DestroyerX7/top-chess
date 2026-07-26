@@ -8,42 +8,11 @@ import {
   StyleSheet,
   RefreshControl,
   Pressable,
-  StyleProp,
-  ViewStyle,
 } from "react-native";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
-import { useEffect } from "react";
 import Ionicons from "@react-native-vector-icons/ionicons";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
-
-function Skeleton({ style }: { style?: StyleProp<ViewStyle> }) {
-  const opacity = useSharedValue(1);
-
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.75, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
-  }, [opacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return <Animated.View style={[styles.skeletonBase, animatedStyle, style]} />;
-}
+import Skeleton from "@/components/Skeleton";
 
 function RoundCardSkeleton({ numGames = 3 }: { numGames?: number }) {
   return (

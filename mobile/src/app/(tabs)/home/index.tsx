@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { colors } from "@/constants/colors";
 import TopChessPlayers from "@/components/TopChessPlayers";
-import { ChessPlayer } from "@/lib/api";
 import { router, Stack } from "expo-router";
 import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
@@ -41,11 +47,13 @@ export default function Home() {
     }
 
     const widgetChessPlayers = topChessPlayers
-      .slice(0, 25)
+      .slice(0, 8)
       .map((chessPlayer) => ({
         name: chessPlayer.name,
+        countryName: chessPlayer.countryName,
         standardRating: chessPlayer.standardRating,
         standardRank: chessPlayer.standardRank,
+        standardMonthRatingChange: chessPlayer.standardMonthRatingChange,
         imageUrl:
           chessPlayer.imageUrl !== null
             ? `https://wsrv.nl/?url=${chessPlayer.imageUrl}`
@@ -57,108 +65,144 @@ export default function Home() {
     });
   }, [topChessPlayers]);
 
-  const handlePress = useCallback((fideId: number) => {
-    router.push({
-      pathname: "/home/chess-player/[fideId]",
-      params: { fideId },
-    });
-  }, []);
+  if (isPending) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: "Top Chess",
+            headerLargeTitle: true,
+            headerSearchBarOptions: {
+              placeholder: "Search...",
+              hideWhenScrolling: false,
+            },
+            headerRight: () => (
+              <Pressable
+                onPress={() => router.push("/home/filters")}
+                hitSlop={8}
+              >
+                <Ionicons name="filter" size={24} color={colors.foreground} />
+              </Pressable>
+            ),
+          }}
+        />
 
-  const renderItem = useCallback(
-    ({ item: chessPlayer }: { item: ChessPlayer }) => (
-      <ChessPlayerCard
-        style={styles.chessPlayerCardContainer}
-        chessPlayer={chessPlayer}
-        isWorldChampion={
-          classicWorldChampion !== undefined &&
-          classicWorldChampion === chessPlayer.fideId
-        }
-        onPress={handlePress}
-      />
-    ),
-    [handlePress, classicWorldChampion],
-  );
+        <FlatList
+          contentInsetAdjustmentBehavior="automatic"
+          data={skeletonData}
+          numColumns={2}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.container}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={() => (
+            <ChessPlayerCardSkeleton style={styles.chessPlayerCardContainer} />
+          )}
+          scrollEnabled={false}
+        />
+      </>
+    );
+  }
 
-  const renderSkeleton = useCallback(
-    () => <ChessPlayerCardSkeleton style={styles.chessPlayerCardContainer} />,
-    [],
-  );
+  if (error !== null) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: "Top Chess",
+            headerLargeTitle: true,
+            headerSearchBarOptions: {
+              placeholder: "Search...",
+              hideWhenScrolling: false,
+            },
+            headerRight: () => (
+              <Pressable
+                onPress={() => router.push("/home/filters")}
+                hitSlop={8}
+              >
+                <Ionicons name="filter" size={24} color={colors.foreground} />
+              </Pressable>
+            ),
+          }}
+        />
 
-  const shownChessPlayers = useMemo(() => {
-    if (topChessPlayers === undefined) {
-      return [];
-    }
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          style={styles.container}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => {
+                if (!isStale) {
+                  return;
+                }
 
-    let result = topChessPlayers;
-
-    const trimmedSearchInput = searchInput.trim().toLowerCase();
-    if (trimmedSearchInput.length > 0) {
-      result = result.filter((c) =>
-        c.name.toLowerCase().includes(trimmedSearchInput),
-      );
-    }
-
-    if (filterOption === "live") {
-      result = result.filter(
-        (c) =>
-          c.hasLiveStandardGame || c.hasLiveRapidGame || c.hasLiveBlitzGame,
-      );
-    } else if (filterOption === "rated-above-2700") {
-      result = result.filter((c) => c.standardRating >= 2700);
-    } else if (filterOption === "top-100") {
-      result = result.filter((c) => c.standardRank <= 100);
-    }
-
-    if (sortOption === "world-rank-descending") {
-      result = [...result].sort((a, b) => b.standardRank - a.standardRank);
-    } else if (sortOption === "rating-change-descending") {
-      result = [...result].sort(
-        (a, b) => b.standardMonthRatingChange - a.standardMonthRatingChange,
-      );
-    } else if (sortOption === "rating-change-ascending") {
-      result = [...result].sort(
-        (a, b) => a.standardMonthRatingChange - b.standardMonthRatingChange,
-      );
-    } else if (sortOption === "ranking-change-descending") {
-      result = [...result].sort(
-        (a, b) => b.standardMonthRankChange - a.standardMonthRankChange,
-      );
-    } else if (sortOption === "ranking-change-ascending") {
-      result = [...result].sort(
-        (a, b) => a.standardMonthRankChange - b.standardMonthRankChange,
-      );
-    } else if (sortOption === "country") {
-      result = [...result].sort((a, b) =>
-        a.countryName.localeCompare(b.countryName),
-      );
-    } else if (sortOption === "age-descending") {
-      result = [...result].sort((a, b) => b.age - a.age);
-    } else if (sortOption === "age-ascending") {
-      result = [...result].sort((a, b) => a.age - b.age);
-    } else if (sortOption === "name") {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return result;
-  }, [topChessPlayers, searchInput, filterOption, sortOption]);
-
-  const listEmptyComponent = useMemo(
-    () =>
-      error === null ? (
-        <View style={styles.container}>
-          <Text size="lg" style={styles.emptyListText}>
-            No chess players found
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.container}>
+                refetch();
+              }}
+            />
+          }
+        >
           <Text size="lg" style={styles.emptyListText}>
             Something went wrong, please refresh to try again
           </Text>
-        </View>
-      ),
-    [error],
-  );
+        </ScrollView>
+      </>
+    );
+  }
+
+  let shownChessPlayers = topChessPlayers;
+
+  const trimmedSearchInput = searchInput.trim().toLowerCase();
+  if (trimmedSearchInput.length > 0) {
+    shownChessPlayers = shownChessPlayers.filter((c) =>
+      c.name.toLowerCase().includes(trimmedSearchInput),
+    );
+  }
+
+  if (filterOption === "live") {
+    shownChessPlayers = shownChessPlayers.filter(
+      (c) => c.hasLiveStandardGame || c.hasLiveRapidGame || c.hasLiveBlitzGame,
+    );
+  } else if (filterOption === "rated-above-2700") {
+    shownChessPlayers = shownChessPlayers.filter(
+      (c) => c.standardRating >= 2700,
+    );
+  } else if (filterOption === "top-100") {
+    shownChessPlayers = shownChessPlayers.filter((c) => c.standardRank <= 100);
+  }
+
+  if (sortOption === "world-rank-descending") {
+    shownChessPlayers = [...shownChessPlayers].sort(
+      (a, b) => b.standardRank - a.standardRank,
+    );
+  } else if (sortOption === "rating-change-descending") {
+    shownChessPlayers = [...shownChessPlayers].sort(
+      (a, b) => b.standardMonthRatingChange - a.standardMonthRatingChange,
+    );
+  } else if (sortOption === "rating-change-ascending") {
+    shownChessPlayers = [...shownChessPlayers].sort(
+      (a, b) => a.standardMonthRatingChange - b.standardMonthRatingChange,
+    );
+  } else if (sortOption === "ranking-change-descending") {
+    shownChessPlayers = [...shownChessPlayers].sort(
+      (a, b) => b.standardMonthRankChange - a.standardMonthRankChange,
+    );
+  } else if (sortOption === "ranking-change-ascending") {
+    shownChessPlayers = [...shownChessPlayers].sort(
+      (a, b) => a.standardMonthRankChange - b.standardMonthRankChange,
+    );
+  } else if (sortOption === "country") {
+    shownChessPlayers = [...shownChessPlayers].sort((a, b) =>
+      a.countryName.localeCompare(b.countryName),
+    );
+  } else if (sortOption === "age-descending") {
+    shownChessPlayers = [...shownChessPlayers].sort((a, b) => b.age - a.age);
+  } else if (sortOption === "age-ascending") {
+    shownChessPlayers = [...shownChessPlayers].sort((a, b) => a.age - b.age);
+  } else if (sortOption === "name") {
+    shownChessPlayers = [...shownChessPlayers].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }
 
   return (
     <>
@@ -182,14 +226,27 @@ export default function Home() {
 
       <FlatList
         contentInsetAdjustmentBehavior="automatic"
-        data={isPending ? skeletonData : shownChessPlayers}
+        data={shownChessPlayers}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.container}
-        keyExtractor={(item, index) =>
-          isPending ? String(index) : String(item.fideId)
-        }
-        renderItem={isPending ? renderSkeleton : renderItem}
+        keyExtractor={(item) => item.fideId.toString()}
+        renderItem={({ item }) => (
+          <ChessPlayerCard
+            style={styles.chessPlayerCardContainer}
+            chessPlayer={item}
+            isWorldChampion={
+              classicWorldChampion !== undefined &&
+              classicWorldChampion === item.fideId
+            }
+            onPress={() =>
+              router.push({
+                pathname: "/home/chess-player/[fideId]",
+                params: { fideId: item.fideId },
+              })
+            }
+          />
+        )}
         refreshing={isRefetching}
         onRefresh={() => {
           if (!isStale) {
@@ -198,8 +255,13 @@ export default function Home() {
 
           refetch();
         }}
-        ListEmptyComponent={listEmptyComponent}
-        scrollEnabled={!isPending}
+        ListEmptyComponent={
+          <View style={styles.container}>
+            <Text size="lg" style={styles.emptyListText}>
+              No chess players found
+            </Text>
+          </View>
+        }
       />
     </>
   );
