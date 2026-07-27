@@ -101,7 +101,7 @@ export default function ChessPlayerCard({
             <MaterialDesignIcons
               name="crown"
               size={32}
-              color="gold"
+              color={colors.gold}
               style={styles.textShadow}
             />
           )}

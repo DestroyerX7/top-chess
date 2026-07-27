@@ -5,7 +5,13 @@ import {
   Stack,
   useLocalSearchParams,
 } from "expo-router";
-import { ScrollView, View, StyleSheet, Pressable } from "react-native";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/lib/flags";
@@ -17,6 +23,7 @@ import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
 import { useEffect, useState } from "react";
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
+import RatingCard from "@/components/RatingCard";
 
 function StatRow({
   label,
@@ -168,7 +175,30 @@ export default function ChessPlayerPage() {
   }, [chessPlayer, isPending]);
 
   if (chessPlayer === null) {
-    return;
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            headerLargeTitle: true,
+            title: "",
+            headerBackButtonDisplayMode: "minimal",
+          }}
+        />
+
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: spacings.lg,
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.foreground} />
+
+          <Text>Loading...</Text>
+        </View>
+      </>
+    );
   }
 
   const hasLiveGame =
@@ -223,7 +253,7 @@ export default function ChessPlayerPage() {
                   <MaterialDesignIcons
                     name="crown"
                     size={24}
-                    color="gold"
+                    color={colors.gold}
                     style={styles.textShadow}
                   />
                 </View>
@@ -249,96 +279,64 @@ export default function ChessPlayerPage() {
           <View style={{ flexDirection: "row", gap: spacings.md }}>
             <Pressable
               style={({ pressed }) => [
-                styles.ratingCard,
-                selectedTimeControl === "standard" && {
-                  borderColor: colors.border,
-                },
+                { flex: 1 },
                 pressed && { opacity: 0.8 },
               ]}
               onPress={() => setSelectedTimeControl("standard")}
             >
-              <MaterialDesignIcons
-                name="chess-pawn"
-                size={32}
-                color={colors.primary}
+              <RatingCard
+                style={{
+                  borderWidth: 1,
+                  borderColor:
+                    selectedTimeControl === "standard"
+                      ? colors.border
+                      : "transparent",
+                }}
+                format="standard"
+                rating={chessPlayer.standardRating}
               />
-
-              <Text size="md" style={{ color: colors.mutedForeground }}>
-                Standard
-              </Text>
-
-              <Text size="2xl" style={{ fontWeight: "700" }}>
-                {chessPlayer.standardRating}
-              </Text>
             </Pressable>
 
             <Pressable
               style={({ pressed }) => [
-                styles.ratingCard,
-                selectedTimeControl === "rapid" && {
-                  borderColor: colors.border,
-                },
+                { flex: 1 },
                 pressed && { opacity: 0.8 },
               ]}
               onPress={() => setSelectedTimeControl("rapid")}
             >
-              <MaterialDesignIcons
-                name="timer"
-                size={32}
-                color={colors.accentForeground}
-              />
-
-              <Text size="md" style={{ color: colors.mutedForeground }}>
-                Rapid
-              </Text>
-
-              <Text
-                size="2xl"
+              <RatingCard
                 style={{
-                  fontWeight: "700",
-                  color:
-                    chessPlayer.rapidRating === null
-                      ? colors.mutedForeground
-                      : chessPlayer.rapidRatingInactive
-                        ? "#e00000"
-                        : colors.foreground,
+                  borderWidth: 1,
+                  borderColor:
+                    selectedTimeControl === "rapid"
+                      ? colors.border
+                      : "transparent",
                 }}
-              >
-                {chessPlayer.rapidRating ?? "Unrated"}
-              </Text>
+                format="rapid"
+                rating={chessPlayer.rapidRating}
+                inactive={chessPlayer.rapidRatingInactive}
+              />
             </Pressable>
 
             <Pressable
               style={({ pressed }) => [
-                styles.ratingCard,
-                selectedTimeControl === "blitz" && {
-                  borderColor: colors.border,
-                },
+                { flex: 1 },
                 pressed && { opacity: 0.8 },
               ]}
               onPress={() => setSelectedTimeControl("blitz")}
             >
-              <MaterialDesignIcons
-                name="lightning-bolt"
-                size={32}
-                color="#ffee00"
-              />
-
-              <Text size="md" style={{ color: colors.mutedForeground }}>
-                Blitz
-              </Text>
-
-              <Text
-                size="2xl"
+              <RatingCard
                 style={{
-                  fontWeight: "700",
-                  color: chessPlayer.blitzRatingInactive
-                    ? "#e00000"
-                    : colors.foreground,
+                  borderWidth: 1,
+                  borderColor:
+                    selectedTimeControl === "blitz"
+                      ? colors.border
+                      : "transparent",
                 }}
-              >
-                {chessPlayer.blitzRating ?? "Unrated"}
-              </Text>
+                format="blitz"
+                rating={chessPlayer.blitzRating}
+                inactive={chessPlayer.blitzRatingInactive}
+              />
             </Pressable>
           </View>
 
@@ -416,7 +414,7 @@ export default function ChessPlayerPage() {
                 >
                   <Text style={{ color: colors.mutedForeground }}>Status</Text>
 
-                  <Text style={{ fontWeight: "600", color: "#e00000" }}>
+                  <Text style={{ fontWeight: "600", color: colors.inactive }}>
                     Inactive
                   </Text>
                 </View>
@@ -453,7 +451,7 @@ export default function ChessPlayerPage() {
                 >
                   <Text style={{ color: colors.mutedForeground }}>Status</Text>
 
-                  <Text style={{ fontWeight: "600", color: "#e00000" }}>
+                  <Text style={{ fontWeight: "600", color: colors.inactive }}>
                     Inactive
                   </Text>
                 </View>
@@ -680,15 +678,5 @@ const styles = StyleSheet.create({
   fideLink: {
     color: colors.mutedForeground,
     fontWeight: "600",
-  },
-
-  ratingCard: {
-    flex: 1,
-    backgroundColor: colors.muted,
-    padding: spacings.lg,
-    alignItems: "center",
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: "transparent",
   },
 });

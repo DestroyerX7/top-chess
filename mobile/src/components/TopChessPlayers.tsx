@@ -47,6 +47,8 @@ const TopChessPlayers = (
     input: "#404040",
     destructive: "#ff2020",
     destructiveForeground: "#ffffff",
+    inactive: "#e00000",
+    gold: "#ef9f27",
   } as const;
 
   const fontSizes = {
@@ -71,10 +73,14 @@ const TopChessPlayers = (
       <VStack
         alignment="leading"
         modifiers={[containerBackground(colors.background, "widget")]}
-        spacing={8}
+        spacing={4}
       >
-        <HStack spacing={8}>
-          <Image systemName="crown.fill" color="#ef9f27" size={fontSizes.md} />
+        <HStack>
+          <Image
+            systemName="crown.fill"
+            color={colors.gold}
+            size={fontSizes.md}
+          />
 
           <Spacer />
 
@@ -88,8 +94,12 @@ const TopChessPlayers = (
           </Text>
         </HStack>
 
-        <VStack alignment="leading" spacing={8}>
-          <HStack spacing={8} modifiers={[frame({ alignment: "leading" })]}>
+        <VStack alignment="leading">
+          <HStack
+            alignment="top"
+            spacing={8}
+            modifiers={[frame({ alignment: "leading" })]}
+          >
             <Image
               uiImage={widgetChessPlayer.imageUrl}
               modifiers={[
@@ -124,44 +134,35 @@ const TopChessPlayers = (
 
           <Spacer />
 
-          <VStack alignment="leading">
-            <HStack spacing={8}>
-              <Text
-                modifiers={[
-                  foregroundStyle(colors.foreground),
-                  font({ size: fontSizes["4xl"], weight: "bold" }),
-                ]}
-              >
-                {widgetChessPlayer.standardRating}
-              </Text>
-
-              {widgetChessPlayer.standardMonthRatingChange !== 0 && (
-                <Text
-                  modifiers={[
-                    foregroundStyle(
-                      widgetChessPlayer.standardMonthRatingChange > 0
-                        ? colors.primary
-                        : colors.destructive,
-                    ),
-                    font({ size: fontSizes.md }),
-                  ]}
-                >
-                  {widgetChessPlayer.standardMonthRatingChange > 0
-                    ? `+${widgetChessPlayer.standardMonthRatingChange}`
-                    : widgetChessPlayer.standardMonthRatingChange}
-                </Text>
-              )}
-            </HStack>
-
+          <HStack>
             <Text
               modifiers={[
-                foregroundStyle(colors.mutedForeground),
-                font({ size: fontSizes.xs }),
+                foregroundStyle(colors.foreground),
+                font({ size: fontSizes["6xl"], weight: "bold" }),
               ]}
             >
-              RATING
+              {widgetChessPlayer.standardRating}
             </Text>
-          </VStack>
+
+            <Spacer />
+
+            {widgetChessPlayer.standardMonthRatingChange !== 0 && (
+              <Text
+                modifiers={[
+                  foregroundStyle(
+                    widgetChessPlayer.standardMonthRatingChange > 0
+                      ? colors.primary
+                      : colors.destructive,
+                  ),
+                  font({ size: fontSizes.md }),
+                ]}
+              >
+                {widgetChessPlayer.standardMonthRatingChange > 0
+                  ? `+${widgetChessPlayer.standardMonthRatingChange}`
+                  : widgetChessPlayer.standardMonthRatingChange}
+              </Text>
+            )}
+          </HStack>
         </VStack>
       </VStack>
     );
@@ -169,7 +170,7 @@ const TopChessPlayers = (
     return (
       <VStack
         modifiers={[containerBackground(colors.background, "widget")]}
-        spacing={8}
+        spacing={4}
       >
         <HStack>
           <Text
@@ -198,7 +199,7 @@ const TopChessPlayers = (
           </Text>
         </HStack>
 
-        <VStack>
+        <VStack spacing={4}>
           {widgetChessPlayers.slice(0, 3).map((c) => (
             <HStack
               key={c.standardRank}
@@ -209,7 +210,7 @@ const TopChessPlayers = (
                 modifiers={[
                   frame({ width: 16 }),
                   foregroundStyle(
-                    c.standardRank === 1 ? "#ef9f27" : colors.mutedForeground,
+                    c.standardRank === 1 ? colors.gold : colors.mutedForeground,
                   ),
                   font({ size: fontSizes.md }),
                 ]}
@@ -249,24 +250,22 @@ const TopChessPlayers = (
 
               <Spacer />
 
-              <Text
-                modifiers={[
-                  foregroundStyle(
-                    c.standardMonthRatingChange > 0
-                      ? colors.primary
-                      : c.standardMonthRatingChange < 0
-                        ? colors.destructive
-                        : colors.mutedForeground,
-                  ),
-                  font({ size: fontSizes.sm }),
-                ]}
-              >
-                {c.standardMonthRatingChange > 0
-                  ? `+${c.standardMonthRatingChange}`
-                  : c.standardMonthRatingChange < 0
-                    ? c.standardMonthRatingChange
-                    : "—"}
-              </Text>
+              {c.standardMonthRatingChange !== 0 && (
+                <Text
+                  modifiers={[
+                    foregroundStyle(
+                      c.standardMonthRatingChange > 0
+                        ? colors.primary
+                        : colors.destructive,
+                    ),
+                    font({ size: fontSizes.sm }),
+                  ]}
+                >
+                  {c.standardMonthRatingChange > 0
+                    ? `+${c.standardMonthRatingChange}`
+                    : c.standardMonthRatingChange}
+                </Text>
+              )}
 
               <Text
                 modifiers={[
@@ -286,7 +285,7 @@ const TopChessPlayers = (
   return (
     <VStack
       modifiers={[containerBackground(colors.background, "widget")]}
-      spacing={8}
+      spacing={4}
     >
       <HStack>
         <Text
@@ -315,7 +314,7 @@ const TopChessPlayers = (
         </Text>
       </HStack>
 
-      <VStack>
+      <VStack spacing={4}>
         {widgetChessPlayers.slice(0, 8).map((c) => (
           <HStack
             key={c.standardRank}
@@ -326,7 +325,7 @@ const TopChessPlayers = (
               modifiers={[
                 frame({ width: 16 }),
                 foregroundStyle(
-                  c.standardRank === 1 ? "#ef9f27" : colors.mutedForeground,
+                  c.standardRank === 1 ? colors.gold : colors.mutedForeground,
                 ),
                 font({ size: fontSizes.md }),
               ]}
@@ -366,24 +365,22 @@ const TopChessPlayers = (
 
             <Spacer />
 
-            <Text
-              modifiers={[
-                foregroundStyle(
-                  c.standardMonthRatingChange > 0
-                    ? colors.primary
-                    : c.standardMonthRatingChange < 0
-                      ? colors.destructive
-                      : colors.mutedForeground,
-                ),
-                font({ size: fontSizes.sm }),
-              ]}
-            >
-              {c.standardMonthRatingChange > 0
-                ? `+${c.standardMonthRatingChange}`
-                : c.standardMonthRatingChange < 0
-                  ? c.standardMonthRatingChange
-                  : "—"}
-            </Text>
+            {c.standardMonthRatingChange !== 0 && (
+              <Text
+                modifiers={[
+                  foregroundStyle(
+                    c.standardMonthRatingChange > 0
+                      ? colors.primary
+                      : colors.destructive,
+                  ),
+                  font({ size: fontSizes.sm }),
+                ]}
+              >
+                {c.standardMonthRatingChange > 0
+                  ? `+${c.standardMonthRatingChange}`
+                  : c.standardMonthRatingChange}
+              </Text>
+            )}
 
             <Text
               modifiers={[

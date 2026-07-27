@@ -10,13 +10,13 @@ import { colors } from "@/constants/colors";
 import { useCallback, useMemo, useState } from "react";
 import { searchChessPlayer, LichessSearchResult } from "@/lib/api";
 import { flagStringToEmoji, getCountryInfo } from "@/lib/flags";
-import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import { Image } from "expo-image";
 import ChessPlayerCard from "@/components/ChessPlayerCard";
 import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
 import { borderRadius } from "@/constants/borders";
 import { useTopChessPlayers } from "@/hooks/useChessQueries";
+import RatingCard from "@/components/RatingCard";
 
 type Segment = {
   text: string;
@@ -225,6 +225,14 @@ const quotes: Quote[] = [
     ],
     author: "Bobby Fischer",
   },
+  {
+    segments: [
+      {
+        text: "Chess is everything: art, science, and sport.",
+      },
+    ],
+    author: "Anatoly Karpov",
+  },
 ];
 
 // Simple seeded PRNG (mulberry32)
@@ -394,10 +402,6 @@ export default function Search() {
         {searchResults !== null &&
           searchResults.map((searchResult) => {
             const countryInfo = getCountryInfo(searchResult.federation);
-            const isRated =
-              searchResult.standard !== undefined ||
-              searchResult.rapid !== undefined ||
-              searchResult.blitz !== undefined;
 
             return (
               <View key={searchResult.id} style={styles.searchResultCard}>
@@ -449,7 +453,7 @@ export default function Search() {
 
                     {searchResult.inactive !== undefined &&
                       searchResult.inactive && (
-                        <Text style={{ color: "#e00000" }}>Inactive</Text>
+                        <Text style={{ color: colors.inactive }}>Inactive</Text>
                       )}
                   </View>
                 </View>
@@ -464,67 +468,25 @@ export default function Search() {
                   </View>
                 )}
 
-                {isRated ? (
-                  <View style={{ flexDirection: "row" }}>
-                    {searchResult.standard !== undefined && (
-                      <View style={styles.ratingCardContainer}>
-                        <View style={styles.ratingCard}>
-                          <MaterialDesignIcons
-                            name="chess-pawn"
-                            size={32}
-                            color={colors.primary}
-                          />
+                <View style={{ flexDirection: "row", gap: spacings.md }}>
+                  <RatingCard
+                    format="standard"
+                    rating={searchResult.standard}
+                    style={{ flex: 1 }}
+                  />
 
-                          <Text style={styles.ratingFormatText}>Standard</Text>
+                  <RatingCard
+                    format="rapid"
+                    rating={searchResult.rapid}
+                    style={{ flex: 1 }}
+                  />
 
-                          <Text size="2xl" style={styles.ratingText}>
-                            {searchResult.standard}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-
-                    {searchResult.rapid !== undefined && (
-                      <View style={styles.ratingCardContainer}>
-                        <View style={styles.ratingCard}>
-                          <MaterialDesignIcons
-                            name="timer"
-                            size={32}
-                            color={colors.accentForeground}
-                          />
-
-                          <Text style={styles.ratingFormatText}>Rapid</Text>
-
-                          <Text size="2xl" style={styles.ratingText}>
-                            {searchResult.rapid}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-
-                    {searchResult.blitz !== undefined && (
-                      <View style={styles.ratingCardContainer}>
-                        <View style={styles.ratingCard}>
-                          <MaterialDesignIcons
-                            name="lightning-bolt"
-                            size={32}
-                            color="#ffee00"
-                          />
-
-                          <Text style={styles.ratingFormatText}>Blitz</Text>
-
-                          <Text size="2xl" style={styles.ratingText}>
-                            {searchResult.blitz}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                ) : (
-                  <Text size="2xl" style={styles.ratingText}>
-                    Unrated
-                  </Text>
-                )}
+                  <RatingCard
+                    format="blitz"
+                    rating={searchResult.blitz}
+                    style={{ flex: 1 }}
+                  />
+                </View>
               </View>
             );
           })}
@@ -611,24 +573,6 @@ const styles = StyleSheet.create({
   photoCreditText: {
     color: colors.mutedForeground,
     fontStyle: "italic",
-  },
-  ratingCardContainer: {
-    flex: 1,
-    padding: spacings.sm,
-    maxWidth: "33.33%",
-  },
-  ratingCard: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: colors.muted,
-    borderRadius: borderRadius.md,
-    padding: spacings.lg,
-  },
-  ratingFormatText: {
-    color: colors.mutedForeground,
-  },
-  ratingText: {
-    fontWeight: "700",
   },
   chessPlayerCardContainer: {
     aspectRatio: 1,
