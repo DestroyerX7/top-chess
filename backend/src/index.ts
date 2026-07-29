@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
 import {
-  chessPlayers as dbChessPlayers,
   topChessPlayers as dbTopChessPlayers,
   dailyGames as dbDailyGames,
   worldChampions as dbWorldChampions,
@@ -168,7 +167,7 @@ app.get("/get-top-chess-players", async (c) => {
     ) {
       return c.json(
         {
-          error: `limit param must be an integer in the range [1,${chessPlayerScrapeAmount}]`,
+          error: `Limit must be an integer in the range [1,${chessPlayerScrapeAmount}], ${limit} given`,
         },
         400,
       );
@@ -179,8 +178,8 @@ app.get("/get-top-chess-players", async (c) => {
 
     const chessPlayers = await db
       .select()
-      .from(dbChessPlayers)
-      .orderBy(dbChessPlayers.livePos)
+      .from(dbTopChessPlayers)
+      .orderBy(dbTopChessPlayers.standardRank)
       .limit(limit);
 
     return c.json(chessPlayers);
@@ -226,20 +225,13 @@ app.get("/get-chess-player/:fideId", async (c) => {
     const fideIdParam = c.req.param("fideId");
 
     if (!fideIdParam) {
-      return c.json({ error: "fideId param is required" }, 400);
+      return c.json({ error: "FideId is required" }, 400);
     }
 
     const fideId = Number(fideIdParam);
 
     if (isNaN(fideId) || !Number.isInteger(fideId)) {
-      return c.json({ error: "fideId must be an integer" }, 400);
-    }
-
-    if (!Number.isInteger(fideId)) {
-      return c.json(
-        { error: "fideId param must be provided as an integer" },
-        400,
-      );
+      return c.json({ error: "FideId must be an integer" }, 400);
     }
 
     const neonClient = neon(c.env.NEON_DATABASE_URL);
@@ -247,8 +239,8 @@ app.get("/get-chess-player/:fideId", async (c) => {
 
     const [chessPlayer] = await db
       .select()
-      .from(dbChessPlayers)
-      .where(eq(dbChessPlayers.fideId, fideId));
+      .from(dbTopChessPlayers)
+      .where(eq(dbTopChessPlayers.fideId, fideId));
 
     if (chessPlayer === undefined) {
       return c.json({ error: "Chess player not found" }, 404);
@@ -361,6 +353,11 @@ app.get("/get-world-champions", async (c) => {
   }
 });
 
+app.patch("update-chess-player-wiki-data", async (c) => {
+  try {
+  } catch {}
+});
+
 async function getChessPlayerWikiData(name: string) {
   try {
     const params = new URLSearchParams({
@@ -372,7 +369,6 @@ async function getChessPlayerWikiData(name: string) {
       explaintext: "true",
       pithumbsize: "500",
       inprop: "url",
-      gsrnamespace: "0",
       format: "json",
     });
 
@@ -389,28 +385,30 @@ async function getChessPlayerWikiData(name: string) {
 
     const data: WikiResponse = await response.json();
 
-    const pages = Object.values(data.query.pages).toSorted(
-      (a, b) => a.index - b.index,
-    );
-
-    const page = pages.find((p) =>
-      p.description?.toLowerCase().includes("chess"),
-    );
+    const page = Object.values(data.query.pages)
+      .toSorted((a, b) => a.index - b.index)
+      .find(
+        (p): p is WikiPage & { fullurl: string; description: string } =>
+          p.fullurl !== undefined &&
+          p.description !== undefined &&
+          p.description.toLowerCase().includes("chess") &&
+          !p.description.toLowerCase().includes("tournament"),
+      );
 
     if (page === undefined) {
       return {
-        imageUrl: null,
-        bio: null,
-        description: null,
         wikipediaUrl: null,
+        imageUrl: null,
+        description: null,
+        bio: null,
       };
     }
 
     return {
+      wikipediaUrl: page.fullurl,
       imageUrl: page.thumbnail?.source ?? null,
+      description: page.description,
       bio: page.extract?.trim() ?? null,
-      description: page.description ?? null,
-      wikipediaUrl: page.fullurl ?? null,
     };
   } catch (error) {
     if (error instanceof Error) {
