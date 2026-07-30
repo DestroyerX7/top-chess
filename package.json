@@ -1,0 +1,8 @@
+{
+  "name": "top-chess",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
