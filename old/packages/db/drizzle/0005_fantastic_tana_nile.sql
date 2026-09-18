@@ -1,1 +1,0 @@
-ALTER TABLE "chess_player" ADD COLUMN "wikipedia_url" text;

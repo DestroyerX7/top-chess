@@ -2,13 +2,10 @@
   "name": "@top-chess/db",
   "private": true,
   "version": "0.0.1",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "scripts": {
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./types": "./src/types.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

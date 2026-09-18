@@ -1,20 +1,20 @@
 import { db } from "@top-chess/db";
-import { topChessPlayers } from "@top-chess/db/src/schema";
-import { NextResponse } from "next/server";
+import { topChessPlayers } from "@top-chess/db/schema";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { verifyJwt } from "@/lib/jwt";
 
 const updateTopChessPlayerSchema = z.object({
-  wikipediaUrl: z.string().nullable().optional(),
+  wikipediaUrl: z.httpUrl().nullable().optional(),
   imageUrl: z.httpUrl().nullable().optional(),
-  description: z.string().nullable().optional(),
-  bio: z.string().nullable().optional(),
+  description: z.string().min(1).nullable().optional(),
+  bio: z.string().min(1).nullable().optional(),
 });
 
 export async function GET(
-  _: Request,
+  _: NextRequest,
   { params }: { params: Promise<{ fideId: string }> },
 ) {
   const { fideId: fideIdParam } = await params;
@@ -47,7 +47,7 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ fideId: string }> },
 ) {
   const cookieStore = await cookies();
@@ -83,7 +83,8 @@ export async function PATCH(
     );
   }
 
-  const bodyResult = updateTopChessPlayerSchema.safeParse(request.body);
+  const body = await request.json();
+  const bodyResult = updateTopChessPlayerSchema.safeParse(body);
 
   if (!bodyResult.success) {
     return NextResponse.json(

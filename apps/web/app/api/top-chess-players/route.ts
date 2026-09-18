@@ -1,6 +1,6 @@
 import { db } from "@top-chess/db";
 import { asc } from "drizzle-orm";
-import { topChessPlayers } from "@top-chess/db/src/schema";
+import { topChessPlayers } from "@top-chess/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 

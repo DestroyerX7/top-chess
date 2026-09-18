@@ -1,5 +1,5 @@
 import { db } from "@top-chess/db";
-import { dailyGames as dbDailyGames } from "@top-chess/db/src/schema";
+import { dailyGames as dbDailyGames } from "@top-chess/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
