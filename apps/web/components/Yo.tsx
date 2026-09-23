@@ -11,7 +11,7 @@ import {
 } from "./ui/field";
 import { Button } from "./ui/button";
 import React, { useState } from "react";
-import { getWikiPages, WikiPage } from "@/lib/wikipedia";
+import { WikiPage } from "@/lib/wikipedia";
 import {
   Item,
   ItemActions,
@@ -31,7 +31,7 @@ export default function Yo({ topChessPlayer }: Props) {
   const [name, setName] = useState(topChessPlayer.name);
   const [pages, setPages] = useState<WikiPage[] | null>(null);
 
-  const onSubmit = async (e: React.SubmitEvent) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const trimmedName = name.trim();

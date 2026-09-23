@@ -1,9 +1,9 @@
 import { db } from "@top-chess/db";
 import { worldChampions as dbWorldChampions } from "@top-chess/db/schema";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
-export async function GET(_: NextRequest) {
+export async function GET() {
   const [worldChampions] = await db
     .select()
     .from(dbWorldChampions)

@@ -13,7 +13,7 @@ export default async function TopChessPlayerPage({
   const { fideId } = await params;
 
   const response = await axios.get<TopChessPlayer>(
-    `http://localhost:3000/api/top-chess-player/${fideId}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/top-chess-player/${fideId}`,
   );
 
   return (

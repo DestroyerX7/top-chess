@@ -60,15 +60,11 @@ export async function PATCH(
   const payload = await verifyJwt<{ admin: boolean }>(jwt);
 
   if (payload === null) {
-    return {
-      error: NextResponse.json({ error: "Invalid jwt" }, { status: 401 }),
-    };
+    return NextResponse.json({ error: "Invalid jwt" }, { status: 401 });
   }
 
   if (!payload.admin) {
-    return {
-      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
-    };
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { fideId: fideIdParam } = await params;

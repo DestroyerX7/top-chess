@@ -47,7 +47,7 @@ export default function Support() {
         <header className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Support</h1>
           <p className="text-muted-foreground">
-            Need help with Top Chess? You're in the right place.
+            Need help with Top Chess? You&apos;re in the right place.
           </p>
         </header>
 

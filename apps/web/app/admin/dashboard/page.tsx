@@ -14,7 +14,7 @@ import Link from "next/link";
 
 export default async function AdminDashboard() {
   const response = await axios.get<TopChessPlayer[]>(
-    "http://localhost:3000/api/top-chess-players",
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/top-chess-players`,
   );
 
   return (

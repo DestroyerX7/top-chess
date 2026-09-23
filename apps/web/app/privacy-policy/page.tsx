@@ -15,8 +15,8 @@ export default function PrivacyPolicy() {
         </header>
 
         <p className="leading-7 text-muted-foreground">
-          This Privacy Policy explains how Top Chess ("the App," "we," "us")
-          handles information when you use the App. We've kept this short and
+          This Privacy Policy explains how Top Chess (&quot;the App,&quot; &quot;we,&quot; &quot;us&quot;)
+          handles information when you use the App. We&apos;e kept this short and
           direct because the App itself does not collect, store, or share any
           personal information about you.
         </p>
@@ -24,15 +24,15 @@ export default function PrivacyPolicy() {
         <Card>
           <CardContent className="space-y-4 p-6">
             <h2 className="text-xl font-semibold">
-              Information we don't collect
+              Information we don&apos;t collect
             </h2>
 
             <p className="leading-7 text-muted-foreground">
               The App does not require an account, does not ask you to enter
               personal information, and does not include analytics,
               advertising, or tracking software development kits (SDKs). We
-              don't collect your name, email address, location, contacts,
-              photos, or any other personal data through the App's features.
+              don&apos;t collect your name, email address, location, contacts,
+              photos, or any other personal data through the App&apos;s features.
             </p>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export default function PrivacyPolicy() {
             </p>
 
             <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
-              These logs are retained according to Cloudflare's standard log
+              These logs are retained according to Cloudflare&apos;s standard log
               retention settings and are only accessible to the developer of the
               App for troubleshooting purposes.
             </div>
@@ -82,7 +82,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-semibold">Third-party services</h2>
 
             <p className="leading-7 text-muted-foreground">
-              The App's backend is hosted on Cloudflare Workers. Cloudflare may
+              The App&apos;s backend is hosted on Cloudflare Workers. Cloudflare may
               process limited technical data as described above as part of
               providing infrastructure services. You can review their privacy
               policy{" "}
@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
             <p className="leading-7 text-muted-foreground">
               The App is distributed through the Apple App Store, which has its
               own privacy practices governing the download and update process.
-              Apple's privacy policy is available{" "}
+              Apple&apos;s privacy policy is available{" "}
               <Link
                 href="https://www.apple.com/legal/privacy/"
                 target="_blank"
@@ -116,7 +116,7 @@ export default function PrivacyPolicy() {
 
         <Card>
           <CardContent className="space-y-4 p-6">
-            <h2 className="text-xl font-semibold">Children's privacy</h2>
+            <h2 className="text-xl font-semibold">Children&apos;s privacy</h2>
 
             <p className="leading-7 text-muted-foreground">
               The App is not directed at children under the age of 13, and we
@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
               We do not retain any personal data because none is collected by
               the App. Automatically generated infrastructure logs (described
               above) are retained only for the period necessary for operational
-              and security purposes, per Cloudflare's log retention settings.
+              and security purposes, per Cloudflare&apos;s log retention settings.
             </p>
           </CardContent>
         </Card>
@@ -159,8 +159,8 @@ export default function PrivacyPolicy() {
 
             <p className="leading-7 text-muted-foreground">
               We may update this Privacy Policy from time to time, for example
-              if the App's functionality changes. We'll update the "Last
-              updated" date above when changes are made. Continued use of the
+              if the App&apos;s functionality changes. We&apos;ll update the &quot;Last
+              updated&quot; date above when changes are made. Continued use of the
               App after changes are posted constitutes acceptance of the updated
               policy.
             </p>
