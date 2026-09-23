@@ -80,9 +80,36 @@ export const topChessPlayers = pgTable("top_chess_players", {
     .notNull(),
 });
 
+type Result = {
+  text: string;
+  url: string;
+};
+
+type Game = {
+  player_1: string;
+  player_2: string;
+  result: Result;
+  player_1_fide_id: number;
+  player_2_fide_id: number;
+  player_1_display: string;
+  player_2_display: string;
+  id?: number;
+};
+
+type Round = Record<string, Game[]>;
+
+type Tournament = {
+  web_url: string;
+  rounds: Round;
+};
+
+type DaySchedule = Record<string, Tournament>;
+
+type ChessSchedule = Record<string, DaySchedule>;
+
 export const dailyGames = pgTable("daily_games", {
   key: text("key").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: jsonb("data").$type<ChessSchedule>().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -92,9 +119,22 @@ export const dailyGames = pgTable("daily_games", {
     .notNull(),
 });
 
+type WorldChampionCategories = {
+  blitz: number[];
+  girls: number[];
+  rapid: number[];
+  classic: number[];
+  juniors: number[];
+};
+
+type WorldChampions = {
+  men: WorldChampionCategories;
+  women: WorldChampionCategories;
+};
+
 export const worldChampions = pgTable("world_champions", {
   key: text("key").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: jsonb("data").$type<WorldChampions>().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { colors } from "@/constants/colors";
-import TopChessPlayers from "@/components/TopChessPlayers";
 import { router, Stack } from "expo-router";
 import ChessPlayerCard, {
   ChessPlayerCardSkeleton,
@@ -60,9 +59,9 @@ export default function Home() {
             : fideLogoUrl,
       }));
 
-    TopChessPlayers.updateSnapshot({
-      widgetChessPlayers,
-    });
+    // TopChessPlayers.updateSnapshot({
+    //   widgetChessPlayers,
+    // });
   }, [topChessPlayers]);
 
   if (isPending) {

@@ -1,4 +1,4 @@
-import { ChessPlayer } from "@/lib/api";
+import { TopChessPlayer } from "@top-chess/db/types";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/lib/flags";
 import { Pressable, View, StyleSheet, ViewProps } from "react-native";
@@ -17,7 +17,7 @@ import { borderRadius } from "@/constants/borders";
 import Skeleton from "./Skeleton";
 
 type Props = {
-  chessPlayer: ChessPlayer;
+  chessPlayer: TopChessPlayer;
   isWorldChampion?: boolean;
   onPress: (fideId: number) => void;
 } & ViewProps;

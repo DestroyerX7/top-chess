@@ -1,12 +1,12 @@
 import { queryKeys } from "@/constants/queryKeys";
 import {
-  ChessPlayer,
   getChessPlayer,
   getDailyGames,
   getTopChessPlayers,
   getWorldChampions,
 } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { TopChessPlayer } from "@top-chess/db/types";
 
 export function useTopChessPlayers() {
   return useQuery({
@@ -25,7 +25,7 @@ export function useChessPlayer(fideId: number) {
     staleTime: 1000 * 60 * 10,
     initialData: () =>
       queryClient
-        .getQueryData<ChessPlayer[]>(queryKeys.topChessPlayers)
+        .getQueryData<TopChessPlayer[]>(queryKeys.topChessPlayers)
         ?.find((c) => c.fideId === fideId) ?? null,
     initialDataUpdatedAt: () =>
       queryClient.getQueryState(queryKeys.topChessPlayers)?.dataUpdatedAt,
