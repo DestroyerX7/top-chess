@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 
 export async function scrapeWorldChampions() {
   const content = await browserbaseFetch(
-    "https://api.browserbase.com/v1/fetch",
+    "https://2700chess.com/next/world-champions",
   );
   const data = JSON.parse(content);
 

@@ -31,7 +31,7 @@ export default function Yo({ topChessPlayer }: Props) {
   const [name, setName] = useState(topChessPlayer.name);
   const [pages, setPages] = useState<WikiPage[] | null>(null);
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
     const trimmedName = name.trim();
@@ -48,6 +48,8 @@ export default function Yo({ topChessPlayer }: Props) {
 
     setPages(response.data);
   };
+
+  const apply = (p: WikiPage) => {};
 
   return (
     <div>
@@ -109,7 +111,9 @@ export default function Yo({ topChessPlayer }: Props) {
               </ItemContent>
 
               <ItemActions>
-                <Button variant="outline">Apply</Button>
+                <Button variant="outline" onClick={() => apply(p)}>
+                  Apply
+                </Button>
               </ItemActions>
             </Item>
           ))}
