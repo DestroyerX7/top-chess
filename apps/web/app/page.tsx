@@ -1,36 +1,13 @@
+import Header from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
 
 export default async function Home() {
   return (
     <div>
-      <header className="p-4 border-b flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/icon-dark.png"
-            alt="Top Chess Icon Dark"
-            width={32}
-            height={32}
-          />
-          <h1 className="font-bold">Top Chess</h1>
-        </Link>
+      <Header className="fixed left-0 right-0" />
 
-        <Link
-          href="https://apps.apple.com/us/app/top-chess-live-ratings/id6782492624"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            src="/download-on-the-app-store-badge.svg"
-            alt="Download on the App Store"
-            width={180}
-            height={60}
-            className="h-12 w-auto"
-          />
-        </Link>
-      </header>
-
-      <section className="flex items-center justify-between mx-32">
+      <section className="h-screen flex items-center justify-between mx-32">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold">
             Track the world's best chess players. Live ratings, rankings, rating
