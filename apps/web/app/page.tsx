@@ -10,13 +10,13 @@ export default async function Home() {
       <section className="h-screen flex items-center justify-between mx-32">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold">
-            Track the world's best chess players. Live ratings, rankings, rating
+            Track the world&apos;s best chess players. Live ratings, rankings, rating
             history, and player bios — all in one clean app.
           </h1>
 
           <p className="text-muted-foreground">
-            Whether you're following your favorite grandmaster, scouting
-            up-and-coming talent, or just curious who's #1 right now, Top Chess
+            Whether you&apos;re following your favorite grandmaster, scouting
+            up-and-coming talent, or just curious who&apos;s #1 right now, Top Chess
             gives you a fast, clean way to follow the competitive chess world.
             No clutter. No noise. Just rankings, ratings, and the players behind
             them.

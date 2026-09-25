@@ -27,7 +27,7 @@ type Props = {
   topChessPlayer: TopChessPlayer;
 };
 
-export default function Yo({ topChessPlayer }: Props) {
+export default function TopChessPlayerWikiSearch({ topChessPlayer }: Props) {
   const [name, setName] = useState(topChessPlayer.name);
   const [pages, setPages] = useState<WikiPage[] | null>(null);
 
@@ -49,10 +49,20 @@ export default function Yo({ topChessPlayer }: Props) {
     setPages(response.data);
   };
 
-  const apply = (p: WikiPage) => {};
+  const apply = async (p: WikiPage) => {
+    await axios.patch<TopChessPlayer>(
+      `/api/top-chess-player/${topChessPlayer.fideId}`,
+      {
+        wikipediaUrl: p.fullurl,
+        imageUrl: p.thumbnail?.source,
+        description: p.description,
+        bio: p.extract,
+      },
+    );
+  };
 
   return (
-    <div>
+    <>
       <form onSubmit={onSubmit}>
         <FieldSet>
           <FieldLegend>Wikipedia Search</FieldLegend>
@@ -107,7 +117,9 @@ export default function Yo({ topChessPlayer }: Props) {
 
                 <ItemDescription>{p.description}</ItemDescription>
 
-                <ItemDescription>{p.fullurl}</ItemDescription>
+                <ItemDescription className="wrap-anywhere">
+                  {p.fullurl}
+                </ItemDescription>
               </ItemContent>
 
               <ItemActions>
@@ -119,6 +131,6 @@ export default function Yo({ topChessPlayer }: Props) {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }

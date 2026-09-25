@@ -64,11 +64,23 @@ export default function TopChessPlayerEditForm({ topChessPlayer }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <FieldSet>
-        <FieldLegend>Top Chess Player Data</FieldLegend>
+        <div className="flex gap-2">
+          {topChessPlayer.imageUrl !== null && (
+            <img
+              src={topChessPlayer.imageUrl}
+              alt={topChessPlayer.name}
+              className="w-16 h-16 object-cover rounded-md"
+            />
+          )}
 
-        <FieldDescription>
-          Edit data from {topChessPlayer.name}
-        </FieldDescription>
+          <div>
+            <FieldLegend>Top Chess Player Data</FieldLegend>
+
+            <FieldDescription>
+              Edit data from {topChessPlayer.name}
+            </FieldDescription>
+          </div>
+        </div>
 
         <FieldGroup>
           <Controller

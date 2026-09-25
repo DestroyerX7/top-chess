@@ -50,32 +50,11 @@ export async function getWikiPages(search: string) {
 
 export async function getTopChessPlayerWikiData(name: string) {
   try {
-    const params = new URLSearchParams({
-      action: "query",
-      generator: "search",
-      gsrsearch: name,
-      prop: "extracts|pageimages|description|info",
-      exintro: "true",
-      explaintext: "true",
-      pithumbsize: "500",
-      inprop: "url",
-      gsrnamespace: "0",
-      format: "json",
-    });
-
-    const { data } = await axios.get<WikiResponse>(
-      `https://en.wikipedia.org/w/api.php?${params}`,
-      {
-        headers: { "User-Agent": "top-chess/1.0 (destroyerincdev@gmail.com)" },
-      },
-    );
-
-    // Add !includes tournament
-    const pages = Object.values(data.query.pages).toSorted(
-      (a, b) => a.index - b.index,
-    );
-    const page = pages.find((p) =>
-      p.description?.toLowerCase().includes("chess"),
+    const pages = await getWikiPages(name);
+    const page = pages.find(
+      (p) =>
+        p.description?.toLowerCase().includes("chess") &&
+        !p.description.includes("tournament"),
     );
 
     if (page === undefined) {

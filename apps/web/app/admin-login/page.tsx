@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Header from "@/components/Header";
 
 export default function Login() {
   const [password, setPassword] = useState("");
@@ -51,29 +52,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-row items-center">
-      <Card className="w-1/4 mx-auto">
-        <CardHeader>
-          <CardTitle>Login as Admin</CardTitle>
+    <>
+      <Header className="fixed left-0 right-0" />
 
-          <CardDescription>
-            Enter admin password to continue to the admin dashboard
-          </CardDescription>
-        </CardHeader>
+      <div className="min-h-screen flex flex-row items-center">
+        <Card className="w-1/4 mx-auto">
+          <CardHeader>
+            <CardTitle>Login as Admin</CardTitle>
 
-        <CardContent>
-          <form onSubmit={(e) => handleSubmit(e)} className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <CardDescription>
+              Enter admin password to continue to the admin dashboard
+            </CardDescription>
+          </CardHeader>
 
-            <Button type="submit">Login</Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <CardContent>
+            <form onSubmit={(e) => handleSubmit(e)} className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <Button type="submit">Login</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

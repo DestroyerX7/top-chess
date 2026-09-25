@@ -1,6 +1,7 @@
+import Header from "@/components/Header";
 import TopChessPlayerEditForm from "@/components/TopChessPlayerEditForm";
 import { buttonVariants } from "@/components/ui/button";
-import Yo from "@/components/Yo";
+import TopChessPlayerWikiSearch from "@/components/TopChessPlayerWikiSearch";
 import { TopChessPlayer } from "@top-chess/db/types";
 import axios from "axios";
 import Link from "next/link";
@@ -17,27 +18,18 @@ export default async function TopChessPlayerPage({
   );
 
   return (
-    <div>
-      <header className="p-4 border-b flex justify-between items-center">
-        <Link href="/">Top Chess</Link>
+    <>
+      <Header isAdmin />
 
-        <Link
-          href="/admin/dashboard"
-          className={buttonVariants({ variant: "ghost" })}
-        >
-          Dashbaord
-        </Link>
-      </header>
-
-      <div className="p-4 flex //flex-row gap-4">
-        <div className="flex-1">
+      <div className="p-4 mx-64 flex gap-4">
+        <div className="basis-0 flex-1 min-w-0">
           <TopChessPlayerEditForm topChessPlayer={response.data} />
         </div>
 
-        <div className="flex-1">
-          <Yo topChessPlayer={response.data} />
+        <div className="basis-0 flex-1 min-w-0">
+          <TopChessPlayerWikiSearch topChessPlayer={response.data} />
         </div>
       </div>
-    </div>
+    </>
   );
 }

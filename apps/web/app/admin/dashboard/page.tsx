@@ -1,3 +1,6 @@
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Item,
   ItemContent,
@@ -11,80 +14,68 @@ import { TopChessPlayer } from "@top-chess/db/types";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const params = await searchParams;
   const response = await axios.get<TopChessPlayer[]>(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/top-chess-players`,
   );
 
+  const topChessPlayers =
+    params.search !== undefined
+      ? response.data.filter((t) =>
+          t.name.toLowerCase().includes(params.search!.toLowerCase()),
+        )
+      : response.data;
+
+  const search = async (formData: FormData) => {
+    "use server";
+
+    const search = formData.get("search")?.toString();
+
+    const params = new URLSearchParams();
+
+    if (search !== undefined && search !== "") {
+      params.set("search", search);
+    }
+
+    redirect(`/admin/dashboard?${params.toString()}`);
+  };
+
   return (
-    <div className="p-4">
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+    <>
+      <Header className="sticky top-0" isAdmin />
 
-          <TabsTrigger value="no-image">No Image</TabsTrigger>
+      <div className="p-4 mx-64">
+        <form className="flex mb-4 gap-2" action={search}>
+          <Input
+            placeholder="Search"
+            name="search"
+            defaultValue={params.search ?? ""}
+          />
 
-          <TabsTrigger value="no-wikipedia">No Wikipedia</TabsTrigger>
+          <Button type="submit">Search</Button>
+        </form>
 
-          <TabsTrigger value="suspicious">Suspicious</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="overview">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
 
-        <TabsContent value="overview">
-          <ItemGroup>
-            {response.data.map((topChessPlayer) => (
-              <Item
-                key={topChessPlayer.fideId}
-                variant="outline"
-                role="listitem"
-                render={
-                  <Link
-                    href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
-                  >
-                    <ItemMedia variant="image">
-                      {topChessPlayer.imageUrl !== null ? (
-                        <Image
-                          src={topChessPlayer.imageUrl}
-                          alt={topChessPlayer.name}
-                          width={32}
-                          height={32}
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <Image
-                          src="https://avatar.vercel.sh/Midnight%20City%20Lights"
-                          alt="Midnight City Lights"
-                          width={32}
-                          height={32}
-                          className="object-cover grayscale"
-                        />
-                      )}
-                    </ItemMedia>
+            <TabsTrigger value="no-image">No Image</TabsTrigger>
 
-                    <ItemContent>
-                      <ItemTitle>
-                        #{topChessPlayer.standardRank} {topChessPlayer.name}
-                      </ItemTitle>
+            <TabsTrigger value="no-wikipedia">No Wikipedia</TabsTrigger>
 
-                      {topChessPlayer.description !== null && (
-                        <ItemDescription>
-                          {topChessPlayer.description}
-                        </ItemDescription>
-                      )}
-                    </ItemContent>
-                  </Link>
-                }
-              />
-            ))}
-          </ItemGroup>
-        </TabsContent>
+            <TabsTrigger value="suspicious">Suspicious</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="no-image">
-          <ItemGroup>
-            {response.data
-              .filter((t) => t.imageUrl === null)
-              .map((topChessPlayer) => (
+          <TabsContent value="overview">
+            <ItemGroup>
+              {topChessPlayers.map((topChessPlayer) => (
                 <Item
                   key={topChessPlayer.fideId}
                   variant="outline"
@@ -115,7 +106,9 @@ export default async function AdminDashboard() {
                       </ItemMedia>
 
                       <ItemContent>
-                        <ItemTitle>{topChessPlayer.name}</ItemTitle>
+                        <ItemTitle>
+                          #{topChessPlayer.standardRank} {topChessPlayer.name}
+                        </ItemTitle>
 
                         {topChessPlayer.description !== null && (
                           <ItemDescription>
@@ -127,114 +120,165 @@ export default async function AdminDashboard() {
                   }
                 />
               ))}
-          </ItemGroup>
-        </TabsContent>
+            </ItemGroup>
+          </TabsContent>
 
-        <TabsContent value="no-wikipedia">
-          <ItemGroup>
-            {response.data
-              .filter((t) => t.wikipediaUrl === null)
-              .map((topChessPlayer) => (
-                <Item
-                  key={topChessPlayer.fideId}
-                  variant="outline"
-                  role="listitem"
-                  render={
-                    <Link
-                      href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
-                    >
-                      <ItemMedia variant="image">
-                        {topChessPlayer.imageUrl !== null ? (
-                          <Image
-                            src={topChessPlayer.imageUrl}
-                            alt={topChessPlayer.name}
-                            width={32}
-                            height={32}
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <Image
-                            src="https://avatar.vercel.sh/Midnight%20City%20Lights"
-                            alt="Midnight City Lights"
-                            width={32}
-                            height={32}
-                            className="object-cover grayscale"
-                          />
-                        )}
-                      </ItemMedia>
+          <TabsContent value="no-image">
+            <ItemGroup>
+              {topChessPlayers
+                .filter((t) => t.imageUrl === null)
+                .map((topChessPlayer) => (
+                  <Item
+                    key={topChessPlayer.fideId}
+                    variant="outline"
+                    role="listitem"
+                    render={
+                      <Link
+                        href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
+                      >
+                        <ItemMedia variant="image">
+                          {topChessPlayer.imageUrl !== null ? (
+                            <Image
+                              src={topChessPlayer.imageUrl}
+                              alt={topChessPlayer.name}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <Image
+                              src="https://avatar.vercel.sh/Midnight%20City%20Lights"
+                              alt="Midnight City Lights"
+                              width={32}
+                              height={32}
+                              className="object-cover grayscale"
+                            />
+                          )}
+                        </ItemMedia>
 
-                      <ItemContent>
-                        <ItemTitle>{topChessPlayer.name}</ItemTitle>
+                        <ItemContent>
+                          <ItemTitle>{topChessPlayer.name}</ItemTitle>
 
-                        {topChessPlayer.description !== null && (
-                          <ItemDescription>
-                            {topChessPlayer.description}
-                          </ItemDescription>
-                        )}
-                      </ItemContent>
-                    </Link>
-                  }
-                />
-              ))}
-          </ItemGroup>
-        </TabsContent>
+                          {topChessPlayer.description !== null && (
+                            <ItemDescription>
+                              {topChessPlayer.description}
+                            </ItemDescription>
+                          )}
+                        </ItemContent>
+                      </Link>
+                    }
+                  />
+                ))}
+            </ItemGroup>
+          </TabsContent>
 
-        <TabsContent value="suspicious">
-          <ItemGroup>
-            {response.data
-              .filter(
-                (t) =>
-                  t.description === null ||
-                  !t.description.includes("born") ||
-                  t.description.includes("tournament"),
-              )
-              .map((topChessPlayer) => (
-                <Item
-                  key={topChessPlayer.fideId}
-                  variant="outline"
-                  role="listitem"
-                  render={
-                    <Link
-                      href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
-                    >
-                      <ItemMedia variant="image">
-                        {topChessPlayer.imageUrl !== null ? (
-                          <Image
-                            src={topChessPlayer.imageUrl}
-                            alt={topChessPlayer.name}
-                            width={32}
-                            height={32}
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <Image
-                            src="https://avatar.vercel.sh/Midnight%20City%20Lights"
-                            alt="Midnight City Lights"
-                            width={32}
-                            height={32}
-                            className="object-cover grayscale"
-                          />
-                        )}
-                      </ItemMedia>
+          <TabsContent value="no-wikipedia">
+            <ItemGroup>
+              {topChessPlayers
+                .filter((t) => t.wikipediaUrl === null)
+                .map((topChessPlayer) => (
+                  <Item
+                    key={topChessPlayer.fideId}
+                    variant="outline"
+                    role="listitem"
+                    render={
+                      <Link
+                        href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
+                      >
+                        <ItemMedia variant="image">
+                          {topChessPlayer.imageUrl !== null ? (
+                            <Image
+                              src={topChessPlayer.imageUrl}
+                              alt={topChessPlayer.name}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <Image
+                              src="https://avatar.vercel.sh/Midnight%20City%20Lights"
+                              alt="Midnight City Lights"
+                              width={32}
+                              height={32}
+                              className="object-cover grayscale"
+                            />
+                          )}
+                        </ItemMedia>
 
-                      <ItemContent>
-                        <ItemTitle>{topChessPlayer.name}</ItemTitle>
+                        <ItemContent>
+                          <ItemTitle>{topChessPlayer.name}</ItemTitle>
 
-                        {topChessPlayer.description !== null && (
-                          <ItemDescription>
-                            {topChessPlayer.description}
-                          </ItemDescription>
-                        )}
-                      </ItemContent>
-                    </Link>
-                  }
-                />
-              ))}
-          </ItemGroup>
-        </TabsContent>
-      </Tabs>
-    </div>
+                          {topChessPlayer.description !== null && (
+                            <ItemDescription>
+                              {topChessPlayer.description}
+                            </ItemDescription>
+                          )}
+                        </ItemContent>
+                      </Link>
+                    }
+                  />
+                ))}
+            </ItemGroup>
+          </TabsContent>
+
+          <TabsContent value="suspicious">
+            <ItemGroup>
+              {topChessPlayers
+                .filter(
+                  (t) =>
+                    t.description === null ||
+                    !t.description.includes("born") ||
+                    t.description.includes("tournament"),
+                )
+                .map((topChessPlayer) => (
+                  <Item
+                    key={topChessPlayer.fideId}
+                    variant="outline"
+                    role="listitem"
+                    render={
+                      <Link
+                        href={`/admin/top-chess-player/${topChessPlayer.fideId}`}
+                      >
+                        <ItemMedia variant="image">
+                          {topChessPlayer.imageUrl !== null ? (
+                            <Image
+                              src={topChessPlayer.imageUrl}
+                              alt={topChessPlayer.name}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <Image
+                              src="https://avatar.vercel.sh/Midnight%20City%20Lights"
+                              alt="Midnight City Lights"
+                              width={32}
+                              height={32}
+                              className="object-cover grayscale"
+                            />
+                          )}
+                        </ItemMedia>
+
+                        <ItemContent>
+                          <ItemTitle>{topChessPlayer.name}</ItemTitle>
+
+                          {topChessPlayer.description !== null && (
+                            <ItemDescription>
+                              {topChessPlayer.description}
+                            </ItemDescription>
+                          )}
+                        </ItemContent>
+                      </Link>
+                    }
+                  />
+                ))}
+            </ItemGroup>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }
