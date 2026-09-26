@@ -12,7 +12,7 @@ type ScrapedChessPlayer = {
   raiting: string; // note: numeric value as string, e.g. "2574.0"
   raitingDiff: number;
   pos_change: string; // e.g. "↑2", "↓3", or "" if unchanged
-  pos_change_value: number;
+  pos_change_value: number | null;
 
   // Live position rankings across different categories (null if not applicable)
   live_pos: number;
@@ -153,7 +153,7 @@ export async function syncTopChessPlayers() {
       c.blitz_best_rating_title.length > 0 ? c.blitz_best_rating_title : null,
 
     standardMonthRatingChange: c.raitingDiff,
-    standardMonthRankChange: c.pos_change_value,
+    standardMonthRankChange: c.pos_change_value ?? 0,
 
     standardYearRatingChange: c.year_ago_rating_change,
     standardYearRankChange: c.year_ago_ranking_change ?? 0,
