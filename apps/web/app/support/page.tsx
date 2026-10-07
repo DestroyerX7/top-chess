@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import Header from "@/components/Header";
 
 const faqs = [
   {
@@ -42,46 +43,54 @@ const faqs = [
 
 export default function Support() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
-      <div className="space-y-8">
-        <header className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Support</h1>
-          <p className="text-muted-foreground">
-            Need help with Top Chess? You&apos;re in the right place.
-          </p>
-        </header>
+    <>
+      <Header className="sticky top-0" />
 
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Frequently Asked Questions</h2>
+      <main className="container mx-auto max-w-3xl px-4 py-12">
+        <div className="space-y-8">
+          <header className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">Support</h1>
+            <p className="text-muted-foreground">
+              Need help with Top Chess? You&apos;re in the right place.
+            </p>
+          </header>
 
-          {faqs.map((faq) => (
-            <Card key={faq.question}>
-              <CardContent className="space-y-2 p-6">
-                <h3 className="font-semibold">{faq.question}</h3>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {faq.answer}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold">
+              Frequently Asked Questions
+            </h2>
+
+            {faqs.map((faq) => (
+              <Card key={faq.question}>
+                <CardContent className="space-y-2 p-6">
+                  <h3 className="font-semibold">{faq.question}</h3>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    {faq.answer}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold">Contact Us</h2>
+
+            <Card>
+              <CardContent className="space-y-1 p-6">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Email
                 </p>
+                <a
+                  href="mailto:destroyerincdev@gmail.com"
+                  className="font-medium text-primary hover:underline"
+                >
+                  destroyerincdev@gmail.com
+                </a>
               </CardContent>
             </Card>
-          ))}
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">Contact Us</h2>
-
-          <Card>
-            <CardContent className="space-y-1 p-6">
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
-              <a
-                href="mailto:destroyerincdev@gmail.com"
-                className="font-medium text-primary hover:underline"
-              >
-                destroyerincdev@gmail.com
-              </a>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-    </main>
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
