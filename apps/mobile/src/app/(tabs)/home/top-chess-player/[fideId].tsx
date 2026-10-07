@@ -158,7 +158,7 @@ export default function ChessPlayerPage() {
   const localSearchParams = useLocalSearchParams<{ fideId: string }>();
   const fideId = Number(localSearchParams.fideId);
 
-  const { data: chessPlayer, isPending } = useTopChessPlayer(fideId);
+  const { data: topChessPlayer, isPending } = useTopChessPlayer(fideId);
 
   const { data: worldChampions } = useWorldChampions();
 
@@ -169,12 +169,13 @@ export default function ChessPlayerPage() {
   >("standard");
 
   useEffect(() => {
-    if (chessPlayer === null && !isPending) {
-      router.back();
+    if (topChessPlayer === null && !isPending) {
+      // Shows back button on home screen
+      router.replace("/home");
     }
-  }, [chessPlayer, isPending]);
+  }, [topChessPlayer, isPending]);
 
-  if (chessPlayer === null) {
+  if (topChessPlayer === null) {
     return (
       <>
         <Stack.Screen
@@ -202,16 +203,16 @@ export default function ChessPlayerPage() {
   }
 
   const hasLiveGame =
-    chessPlayer.hasLiveStandardGame ||
-    chessPlayer.hasLiveRapidGame ||
-    chessPlayer.hasLiveBlitzGame;
+    topChessPlayer.hasLiveStandardGame ||
+    topChessPlayer.hasLiveRapidGame ||
+    topChessPlayer.hasLiveBlitzGame;
 
   return (
     <>
       <Stack.Screen
         options={{
           headerLargeTitle: true,
-          title: chessPlayer.name,
+          title: topChessPlayer.name,
           headerBackButtonDisplayMode: "minimal",
         }}
       />
@@ -226,7 +227,7 @@ export default function ChessPlayerPage() {
           <Image
             source={{
               uri:
-                chessPlayer.imageUrl ??
+                topChessPlayer.imageUrl ??
                 "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg",
             }}
             contentFit="contain"
@@ -236,15 +237,16 @@ export default function ChessPlayerPage() {
           {/* Gradient overlay name badge */}
           <View style={styles.heroBadge}>
             <Text size="4xl" style={styles.heroName}>
-              {chessPlayer.name}
+              {topChessPlayer.name}
             </Text>
 
             <Text size="lg" style={styles.heroCountry}>
-              {chessPlayer.countryName} {flagStringToEmoji(chessPlayer.flag)}
+              {topChessPlayer.countryName}{" "}
+              {flagStringToEmoji(topChessPlayer.flag)}
             </Text>
 
             {classicWorldChampion !== undefined &&
-              classicWorldChampion === chessPlayer.fideId && (
+              classicWorldChampion === topChessPlayer.fideId && (
                 <View style={styles.worldChampionContainer}>
                   <Text size="lg" style={styles.worldChampionText}>
                     Current World Champion
@@ -268,9 +270,9 @@ export default function ChessPlayerPage() {
         </View>
 
         {/* Description */}
-        {chessPlayer.description !== null && (
+        {topChessPlayer.description !== null && (
           <Text size="lg" style={styles.description}>
-            {chessPlayer.description}
+            {topChessPlayer.description}
           </Text>
         )}
 
@@ -293,7 +295,7 @@ export default function ChessPlayerPage() {
                       : "transparent",
                 }}
                 format="standard"
-                rating={chessPlayer.standardRating}
+                rating={topChessPlayer.standardRating}
               />
             </Pressable>
 
@@ -313,8 +315,8 @@ export default function ChessPlayerPage() {
                       : "transparent",
                 }}
                 format="rapid"
-                rating={chessPlayer.rapidRating}
-                inactive={chessPlayer.rapidRatingInactive}
+                rating={topChessPlayer.rapidRating}
+                inactive={topChessPlayer.rapidRatingInactive}
               />
             </Pressable>
 
@@ -334,8 +336,8 @@ export default function ChessPlayerPage() {
                       : "transparent",
                 }}
                 format="blitz"
-                rating={chessPlayer.blitzRating}
-                inactive={chessPlayer.blitzRatingInactive}
+                rating={topChessPlayer.blitzRating}
+                inactive={topChessPlayer.blitzRatingInactive}
               />
             </Pressable>
           </View>
@@ -344,24 +346,24 @@ export default function ChessPlayerPage() {
             <>
               <StatRow
                 label="Standard Rating"
-                value={chessPlayer.standardRating}
-                delta={chessPlayer.standardMonthRatingChange}
+                value={topChessPlayer.standardRating}
+                delta={topChessPlayer.standardMonthRatingChange}
               />
 
               <StatRow
                 label="Year Rating Change"
                 value={
-                  chessPlayer.standardYearRatingChange === 0
-                    ? chessPlayer.standardYearRatingChange
+                  topChessPlayer.standardYearRatingChange === 0
+                    ? topChessPlayer.standardYearRatingChange
                     : ""
                 }
-                delta={chessPlayer.standardYearRatingChange}
+                delta={topChessPlayer.standardYearRatingChange}
               />
 
               <StatRow
                 label="World Rank"
-                value={`#${chessPlayer.standardRank}`}
-                delta={chessPlayer.standardMonthRankChange}
+                value={`#${topChessPlayer.standardRank}`}
+                delta={topChessPlayer.standardMonthRankChange}
                 positiveSymbol="▲"
                 negativeSymbol="▼"
               />
@@ -369,42 +371,42 @@ export default function ChessPlayerPage() {
               <StatRow
                 label="Year Ranking Change"
                 value={
-                  chessPlayer.standardYearRankChange === 0
-                    ? chessPlayer.standardYearRankChange
+                  topChessPlayer.standardYearRankChange === 0
+                    ? topChessPlayer.standardYearRankChange
                     : ""
                 }
-                delta={chessPlayer.standardYearRankChange}
+                delta={topChessPlayer.standardYearRankChange}
                 positiveSymbol="▲"
                 negativeSymbol="▼"
               />
 
               <StatRow
                 label="Recent Games"
-                value={chessPlayer.recentStandardGamesCount}
+                value={topChessPlayer.recentStandardGamesCount}
               />
             </>
           ) : selectedTimeControl === "rapid" ? (
             <>
               <StatRow
                 label="Rapid Rating"
-                value={chessPlayer.rapidRating ?? "Unrated"}
+                value={topChessPlayer.rapidRating ?? "Unrated"}
               />
 
               <StatRow
                 label="World Rank"
                 value={
-                  chessPlayer.rapidRank !== null
-                    ? `#${chessPlayer.rapidRank}`
+                  topChessPlayer.rapidRank !== null
+                    ? `#${topChessPlayer.rapidRank}`
                     : "Unranked"
                 }
               />
 
               <StatRow
                 label="Recent Games"
-                value={chessPlayer.recentRapidGamesCount}
+                value={topChessPlayer.recentRapidGamesCount}
               />
 
-              {chessPlayer.rapidRatingInactive && (
+              {topChessPlayer.rapidRatingInactive && (
                 <View
                   style={{
                     flexDirection: "row",
@@ -424,24 +426,24 @@ export default function ChessPlayerPage() {
             <>
               <StatRow
                 label="Blitz Rating"
-                value={chessPlayer.blitzRating ?? "Unrated"}
+                value={topChessPlayer.blitzRating ?? "Unrated"}
               />
 
               <StatRow
                 label="World Rank"
                 value={
-                  chessPlayer.blitzRank !== null
-                    ? `#${chessPlayer.blitzRank}`
+                  topChessPlayer.blitzRank !== null
+                    ? `#${topChessPlayer.blitzRank}`
                     : "Unranked"
                 }
               />
 
               <StatRow
                 label="Recent Games"
-                value={chessPlayer.recentBlitzGamesCount}
+                value={topChessPlayer.recentBlitzGamesCount}
               />
 
-              {chessPlayer.blitzRatingInactive && (
+              {topChessPlayer.blitzRatingInactive && (
                 <View
                   style={{
                     flexDirection: "row",
@@ -464,42 +466,42 @@ export default function ChessPlayerPage() {
         <SectionCard title="About">
           <StatRow
             label="Country"
-            value={`${chessPlayer.countryName} ${flagStringToEmoji(chessPlayer.flag)}`}
+            value={`${topChessPlayer.countryName} ${flagStringToEmoji(topChessPlayer.flag)}`}
           />
 
-          {chessPlayer.birthday !== null && (
+          {topChessPlayer.birthday !== null && (
             <StatRow
               label="Birthday"
               value={new Date(
-                `${chessPlayer.birthday}T00:00:00`,
+                `${topChessPlayer.birthday}T00:00:00`,
               ).toLocaleDateString()}
             />
           )}
 
-          <StatRow label="Age" value={chessPlayer.age} />
+          <StatRow label="Age" value={topChessPlayer.age} />
 
-          <StatRow label="FIDE ID" value={chessPlayer.fideId} />
+          <StatRow label="FIDE ID" value={topChessPlayer.fideId} />
         </SectionCard>
 
         {/* Achievements */}
         <SectionCard title="Achievements">
           <Text style={styles.achievementText}>
-            {chessPlayer.standardBestRankTitle}
+            {topChessPlayer.standardBestRankTitle}
           </Text>
 
           <Text style={styles.achievementText}>
-            {chessPlayer.standardBestRatingTitle}
+            {topChessPlayer.standardBestRatingTitle}
           </Text>
 
-          {chessPlayer.rapidBestRatingTitle !== null && (
+          {topChessPlayer.rapidBestRatingTitle !== null && (
             <Text style={styles.achievementText}>
-              {chessPlayer.rapidBestRatingTitle}
+              {topChessPlayer.rapidBestRatingTitle}
             </Text>
           )}
 
-          {chessPlayer.blitzBestRatingTitle !== null && (
+          {topChessPlayer.blitzBestRatingTitle !== null && (
             <Text style={styles.achievementText}>
-              {chessPlayer.blitzBestRatingTitle}
+              {topChessPlayer.blitzBestRatingTitle}
             </Text>
           )}
         </SectionCard>
@@ -507,15 +509,15 @@ export default function ChessPlayerPage() {
         {/* Chart */}
         <RatingHistoryChart
           ratingHistory={[
-            ...chessPlayer.standardRatingHistory,
-            Math.round(chessPlayer.standardRating),
+            ...topChessPlayer.standardRatingHistory,
+            Math.round(topChessPlayer.standardRating),
           ]}
         />
 
         {/* Bio */}
-        {chessPlayer.bio !== null && (
+        {topChessPlayer.bio !== null && (
           <SectionCard title="Biography">
-            {chessPlayer.bio
+            {topChessPlayer.bio
               .split("\n")
               .filter((s) => s.length > 0)
               .map((text, index) => (
@@ -527,9 +529,9 @@ export default function ChessPlayerPage() {
         )}
 
         {/* Wikipedia link */}
-        {chessPlayer.wikipediaUrl !== null && (
+        {topChessPlayer.wikipediaUrl !== null && (
           <Link
-            href={chessPlayer.wikipediaUrl as ExternalPathString}
+            href={topChessPlayer.wikipediaUrl as ExternalPathString}
             target="_blank"
             style={styles.wikiLink}
           >
@@ -539,7 +541,7 @@ export default function ChessPlayerPage() {
 
         {/* FIDE link */}
         <Link
-          href={`https://ratings.fide.com/profile/${chessPlayer.fideId}`}
+          href={`https://ratings.fide.com/profile/${topChessPlayer.fideId}`}
           target="_blank"
           style={styles.fideLink}
         >
