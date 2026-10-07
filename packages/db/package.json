@@ -1,7 +1,7 @@
 {
   "name": "@top-chess/db",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",

@@ -10,7 +10,7 @@ export default function HomeLayout() {
     <Stack>
       <Stack.Screen name="index" />
 
-      <Stack.Screen name="chess-player/[fideId]" />
+      <Stack.Screen name="top-chess-player/[fideId]" />
 
       <Stack.Screen
         name="filters"

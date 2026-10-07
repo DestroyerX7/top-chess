@@ -1,7 +1,5 @@
 import type { topChessPlayers, dailyGames, worldChampions } from "./schema";
 
-type TopChessPlayer = typeof topChessPlayers.$inferSelect;
-type DailyGames = typeof dailyGames.$inferSelect.data;
-type WorldChampions = typeof worldChampions.$inferSelect.data;
-
-export type { TopChessPlayer, DailyGames, WorldChampions };
+export type TopChessPlayer = typeof topChessPlayers.$inferSelect;
+export type DailyGames = typeof dailyGames.$inferSelect.data;
+export type WorldChampions = typeof worldChampions.$inferSelect.data;

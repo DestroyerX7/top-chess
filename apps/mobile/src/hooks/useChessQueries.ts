@@ -6,7 +6,7 @@ import {
   getWorldChampions,
 } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { TopChessPlayer } from "@top-chess/db/types";
+import type { TopChessPlayer } from "@top-chess/db/types";
 
 export function useTopChessPlayers() {
   return useQuery({
