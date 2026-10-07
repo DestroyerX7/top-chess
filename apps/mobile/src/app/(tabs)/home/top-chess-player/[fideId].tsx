@@ -16,7 +16,7 @@ import { LineChart } from "react-native-gifted-charts";
 import { colors } from "@/constants/colors";
 import { flagStringToEmoji } from "@/lib/flags";
 import { Image } from "expo-image";
-import { useChessPlayer, useWorldChampions } from "@/hooks/useChessQueries";
+import { useTopChessPlayer, useWorldChampions } from "@/hooks/useChessQueries";
 import { spacings } from "@/constants/spacings";
 import { fontSizes, lineHeights } from "@/constants/fonts";
 import Text from "@/components/Text";
@@ -158,7 +158,7 @@ export default function ChessPlayerPage() {
   const localSearchParams = useLocalSearchParams<{ fideId: string }>();
   const fideId = Number(localSearchParams.fideId);
 
-  const { data: chessPlayer, isPending } = useChessPlayer(fideId);
+  const { data: chessPlayer, isPending } = useTopChessPlayer(fideId);
 
   const { data: worldChampions } = useWorldChampions();
 

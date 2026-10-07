@@ -1,7 +1,7 @@
 import { colors } from "@/constants/colors";
 import { spacings } from "@/constants/spacings";
 import { useDailyGames } from "@/hooks/useChessQueries";
-import { Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import {
   View,
   ScrollView,
@@ -169,7 +169,11 @@ export default function Events() {
                                           style={styles.game}
                                         >
                                           <Text style={styles.gamePlayerText}>
-                                            {game.player_1_display}
+                                            <Link
+                                              href={`/(tabs)/home/top-chess-player/${game.player_1_fide_id}`}
+                                            >
+                                              {game.player_1_display}
+                                            </Link>
                                           </Text>
 
                                           <Text style={styles.gameResultText}>
@@ -184,7 +188,11 @@ export default function Events() {
                                               styles.textAlignRight,
                                             ]}
                                           >
-                                            {game.player_2_display}
+                                            <Link
+                                              href={`/(tabs)/home/top-chess-player/${game.player_2_fide_id}`}
+                                            >
+                                              {game.player_2_display}
+                                            </Link>
                                           </Text>
                                         </View>
                                       ))}

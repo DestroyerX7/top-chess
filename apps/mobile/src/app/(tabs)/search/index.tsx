@@ -501,7 +501,7 @@ export default function Search() {
                   chessPlayer={chessPlayer}
                   onPress={(fideId: number) =>
                     router.push({
-                      pathname: "/home/chess-player/[fideId]",
+                      pathname: "/home/top-chess-player/[fideId]",
                       params: { fideId },
                     })
                   }

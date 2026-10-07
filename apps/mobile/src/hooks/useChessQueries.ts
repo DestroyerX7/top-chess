@@ -1,6 +1,6 @@
 import { queryKeys } from "@/constants/queryKeys";
 import {
-  getChessPlayer,
+  getTopChessPlayer,
   getDailyGames,
   getTopChessPlayers,
   getWorldChampions,
@@ -16,12 +16,12 @@ export function useTopChessPlayers() {
   });
 }
 
-export function useChessPlayer(fideId: number) {
+export function useTopChessPlayer(fideId: number) {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: queryKeys.chessPlayer(fideId),
-    queryFn: () => getChessPlayer(fideId),
+    queryKey: queryKeys.topChessPlayer(fideId),
+    queryFn: () => getTopChessPlayer(fideId),
     staleTime: 1000 * 60 * 10,
     initialData: () =>
       queryClient

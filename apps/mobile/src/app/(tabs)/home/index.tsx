@@ -240,7 +240,7 @@ export default function Home() {
             }
             onPress={() =>
               router.push({
-                pathname: "/home/chess-player/[fideId]",
+                pathname: "/home/top-chess-player/[fideId]",
                 params: { fideId: item.fideId },
               })
             }

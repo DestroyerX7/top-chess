@@ -24,16 +24,16 @@ export type LichessSearchResult = {
 
 export async function getTopChessPlayers() {
   const response = await axios.get<TopChessPlayer[]>(
-    "https://top-chess-web-gray.vercel.app/api/top-chess-players",
+    "https://top-chess-live.vercel.app/api/top-chess-players",
   );
 
   return response.data;
 }
 
-export async function getChessPlayer(fideId: number | string) {
+export async function getTopChessPlayer(fideId: number | string) {
   // Maybe remove | null
   const response = await axios.get<TopChessPlayer | null>(
-    `https://top-chess-web-gray.vercel.app/api/top-chess-player/${fideId}`,
+    `https://top-chess-live.vercel.app/api/top-chess-player/${fideId}`,
   );
 
   return response.data;
@@ -41,7 +41,7 @@ export async function getChessPlayer(fideId: number | string) {
 
 export async function getDailyGames() {
   const response = await axios.get<DailyGames>(
-    "https://top-chess-web-gray.vercel.app/api/daily-games",
+    "https://top-chess-live.vercel.app/api/daily-games",
   );
 
   return response.data;
@@ -49,7 +49,7 @@ export async function getDailyGames() {
 
 export async function getWorldChampions() {
   const response = await axios.get<WorldChampions>(
-    "https://top-chess-web-gray.vercel.app/api/world-champions",
+    "https://top-chess-live.vercel.app/api/world-champions",
   );
 
   return response.data;
