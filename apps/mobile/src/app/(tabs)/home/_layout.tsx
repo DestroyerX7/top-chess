@@ -8,7 +8,12 @@ export default function HomeLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" />
+      <Stack.Screen
+        name="index"
+        options={{
+          headerBackVisible: true,
+        }}
+      />
 
       <Stack.Screen name="top-chess-player/[fideId]" />
 

@@ -1,6 +1,7 @@
 import {
   ExternalPathString,
   Link,
+  Redirect,
   router,
   Stack,
   useLocalSearchParams,
@@ -154,7 +155,7 @@ function RatingHistoryChart({ ratingHistory }: { ratingHistory: number[] }) {
   );
 }
 
-export default function ChessPlayerPage() {
+export default function TopChessPlayerPage() {
   const localSearchParams = useLocalSearchParams<{ fideId: string }>();
   const fideId = Number(localSearchParams.fideId);
 
@@ -170,8 +171,7 @@ export default function ChessPlayerPage() {
 
   useEffect(() => {
     if (topChessPlayer === null && !isPending) {
-      // Shows back button on home screen
-      router.replace("/home");
+      router.dismissTo("/(tabs)/home");
     }
   }, [topChessPlayer, isPending]);
 
