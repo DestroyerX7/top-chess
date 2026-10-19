@@ -1,56 +1,72 @@
-# Welcome to your Expo app 👋
+# Top Chess ♟️
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Track the world's best chess players.** Live ratings, rankings, rating history, and player bios, all in one clean app.
 
-## Get started
+Top Chess puts the world's elite chess players at your fingertips. Browse a constantly updated leaderboard of the highest-rated players on the planet, and see exactly where each player stands and how they got there.
 
-1. Install dependencies
+Whether you're following your favorite grandmaster, scouting up-and-coming talent, or just curious who's #1 right now, Top Chess gives you a fast, clean way to follow the competitive chess world.
 
-   ```bash
-   npm install
-   ```
+> No clutter. No noise. Just rankings, ratings, and the players behind them.
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- **World Rankings**: Browse top-rated players ranked by current rating
+- **Player Profiles**: Tap any player for a detailed breakdown of their rating, world rank, and biography
+- **Rating & Rank Changes**: See how a player's rating and ranking have shifted over time
+- **Rating History**: Explore a player's full rating trajectory with historical data
+- **Player Search**: Quickly find any player by name
 
-In the output, you'll find options to open the app in a
+## Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo](https://expo.dev/) (React Native)
+- Data served by the companion [Next.js API](../web)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Getting Started
 
-## Get a fresh project
+### Prerequisites
 
-When you're ready, run:
+- Node.js (LTS recommended)
+- npm, yarn, or pnpm
+- [Expo Go](https://expo.dev/go) on your device, or an iOS Simulator / Android Emulator
+
+### Installation
 
 ```bash
-npm run reset-project
+cd apps/mobile
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Configuration
 
-### Other setup steps
+Create a `.env` file in the `apps/mobile` directory and point the app at the API:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
 
-## Learn more
+For production builds, set this to your deployed Next.js website URL.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Run the app
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo start
+```
 
-## Join the community
+Then press `i` for the iOS Simulator, `a` for the Android Emulator, or scan the QR code with Expo Go.
 
-Join our community of developers creating universal apps.
+## Building for Release
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project can be built and submitted with [EAS](https://docs.expo.dev/eas/):
+
+```bash
+npx eas build --platform ios
+npx eas submit --platform ios
+```
+
+## Related
+
+- **API, Privacy Policy, and Support pages:** see the [Next.js website](../web)
+
+## Download
+
+Download Top Chess and stay on top of the game.

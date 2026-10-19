@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Top Chess Web
+
+The Next.js website for the **Top Chess** iOS app. It serves several roles:
+
+- **API for the app**: provides the player, rating, ranking, and rating history data used by the Expo app
+- **App Store pages**: hosts the Privacy Policy and Support pages required for the iOS App Store
+- **Admin dashboard**: lets admins log in to view and update data in the database
+- **Scheduled data updates**: a cron route, triggered by Upstash QStash, keeps the database data fresh
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/)
+- [Neon](https://neon.tech/) (serverless Postgres)
+- [Drizzle ORM](https://orm.drizzle.team/) (schema and setup live in the shared [`packages/db`](../../packages/db) package)
+- [Upstash QStash](https://upstash.com/docs/qstash) (scheduled cron calls)
+- [Browserbase](https://www.browserbase.com/) (browser automation)
+- [2700chess](https://2700chess.com/) API (rating and ranking data)
+- [Vercel](https://vercel.com/) (hosting and deployment)
+
+## How It Works
+
+```
+2700chess API / Browserbase
+          │
+          ▼
+  Cron route (/api/cron/...)  ◄──  Upstash QStash (schedule)
+          │
+          ▼
+ Neon Postgres (via Drizzle)
+          │
+          ├──► Public API routes ──► Top Chess Expo app
+          └──► Admin dashboard (login required)
+```
+
+1. QStash calls the cron route on a schedule.
+2. The route pulls fresh player data and writes it to the Neon database through the shared `packages/db` package.
+3. The Expo app reads from the public API routes.
+4. Admins can log in to the dashboard to view and edit data manually.
+
+## Pages
+
+| Route      | Description                                 |
+| ---------- | ------------------------------------------- |
+| `/privacy` | Privacy Policy (required for the App Store) |
+| `/support` | Support page (required for the App Store)   |
+| `/admin`   | Admin dashboard (login required)            |
+| `/api/*`   | API routes used by the mobile app           |
+
+> Update the routes above to match your actual paths.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (LTS recommended)
+- A [Neon](https://neon.tech/) database
+- An [Upstash](https://upstash.com/) account with QStash enabled
+- A [Browserbase](https://www.browserbase.com/) account
+
+### Installation
+
+```bash
+cd apps/web
+npm install
+```
+
+### Environment Variables
+
+Create a `.env.local` file in the `apps/web` directory:
+
+```bash
+# Database
+NEON_DATABASE_URL=
+
+# Upstash QStash
+QSTASH_URL=
+QSTASH_TOKEN=
+QSTASH_CURRENT_SIGNING_KEY=
+QSTASH_NEXT_SIGNING_KEY=
+
+# Browserbase
+BROWSERBASE_API_KEY=
+
+# Admin auth
+JWT_SECRET=
+HASHED_ADMIN_PASSWORD=
+
+CRON_SECRET=
+
+NEXT_PUBLIC_BASE_URL=
+```
+
+### Database
+
+All database setup (Drizzle schema, client, and migrations) lives in the separate [`packages/db`](../../packages/db/) package, so this site doesn't define its own schema. Set up the database from there first. See the [`packages/db` README](../../packages/db/README.md) for details.
+
+### Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The site will be available at [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cron Updates
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Database updates are triggered by a cron route that **Upstash QStash** calls on a schedule. Requests to this route should be verified with the QStash signing keys so only QStash can trigger it.
 
-## Learn More
+To set it up:
 
-To learn more about Next.js, take a look at the following resources:
+1. Deploy the site to Vercel.
+2. In the Upstash console, create a QStash schedule pointing at your deployed cron route URL.
+3. Choose how often it should run (for example, daily).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The site is deployed on [Vercel](https://vercel.com/). Add the environment variables above in your Vercel project settings, then push to your main branch to deploy.
 
-## Deploy on Vercel
+## Related
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Database package:** see [`packages/db`](../../packages/db/)
+- **Mobile app:** see the [Expo app](../mobile)
