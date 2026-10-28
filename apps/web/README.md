@@ -46,8 +46,6 @@ The Next.js website for the **Top Chess** iOS app. It serves several roles:
 | `/admin`   | Admin dashboard (login required)            |
 | `/api/*`   | API routes used by the mobile app           |
 
-> Update the routes above to match your actual paths.
-
 ## Getting Started
 
 ### Prerequisites
