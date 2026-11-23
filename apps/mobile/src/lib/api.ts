@@ -24,7 +24,7 @@ export type LichessSearchResult = {
 
 export async function getTopChessPlayers() {
   const response = await axios.get<TopChessPlayer[]>(
-    "https://top-chess-live.vercel.app/api/top-chess-players",
+    `${process.env.EXPO_PUBLIC_API_URL}/api/top-chess-players`,
   );
 
   return response.data;
@@ -33,7 +33,7 @@ export async function getTopChessPlayers() {
 export async function getTopChessPlayer(fideId: number | string) {
   // Maybe remove | null
   const response = await axios.get<TopChessPlayer | null>(
-    `https://top-chess-live.vercel.app/api/top-chess-player/${fideId}`,
+    `${process.env.EXPO_PUBLIC_API_URL}/api/top-chess-player/${fideId}`,
   );
 
   return response.data;
@@ -41,7 +41,7 @@ export async function getTopChessPlayer(fideId: number | string) {
 
 export async function getDailyGames() {
   const response = await axios.get<DailyGames>(
-    "https://top-chess-live.vercel.app/api/daily-games",
+    `${process.env.EXPO_PUBLIC_API_URL}/api/daily-games`,
   );
 
   return response.data;
@@ -49,7 +49,7 @@ export async function getDailyGames() {
 
 export async function getWorldChampions() {
   const response = await axios.get<WorldChampions>(
-    "https://top-chess-live.vercel.app/api/world-champions",
+    `${process.env.EXPO_PUBLIC_API_URL}/api/world-champions`,
   );
 
   return response.data;

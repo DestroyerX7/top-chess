@@ -1,5 +1,5 @@
 import { colors } from "@/constants/colors";
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/native-tabs";
 import { DynamicColorIOS } from "react-native";
 
 export default function TabsLayout() {

@@ -17,6 +17,7 @@ import { spacings } from "@/constants/spacings";
 import Text from "@/components/Text";
 import { useFilterStore } from "@/hooks/useFilterStore";
 import Ionicons from "@react-native-vector-icons/ionicons";
+import TopChessPlayers from "@/components/TopChessPlayers";
 
 const fideLogoUrl =
   "https://www.fide.com/wp-content/uploads/FIDE-Logo-16x9-1.jpg";
@@ -59,9 +60,9 @@ export default function Home() {
             : fideLogoUrl,
       }));
 
-    // TopChessPlayers.updateSnapshot({
-    //   widgetChessPlayers,
-    // });
+    TopChessPlayers.updateSnapshot({
+      widgetChessPlayers,
+    });
   }, [topChessPlayers]);
 
   if (isPending) {
