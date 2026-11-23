@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncTopChessPlayers } from "@/lib/scrapers/top-chess-players";
+import { scrapeTopChessPlayers } from "@/lib/scrapers/top-chess-players";
 
 export async function POST(request: NextRequest) {
   const auth = request.headers.get("authorization");
@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await syncTopChessPlayers();
+  const result = await scrapeTopChessPlayers();
 
   return Response.json({ ok: true, ...result });
 }

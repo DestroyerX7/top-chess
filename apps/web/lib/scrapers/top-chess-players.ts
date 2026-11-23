@@ -90,7 +90,7 @@ type ScrapedChessPlayer = {
 
 const chessPlayerScrapeAmount = 250;
 
-export async function syncTopChessPlayers() {
+export async function scrapeTopChessPlayers() {
   // const content = await browserbaseFetch(
   //   `https://2700chess.com/next/main-table-men?sort=standard&per-page=${chessPlayerScrapeAmount}`,
   // );
