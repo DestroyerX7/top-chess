@@ -1,9 +1,10 @@
-import { browserbaseFetch } from "./browserbase";
+// import { browserbaseFetch } from "./browserbase";
 import { db } from "@top-chess/db";
 import { topChessPlayers as dbTopChessPlayers } from "@top-chess/db/schema";
 import { eq, notInArray, sql } from "drizzle-orm";
 import pLimit from "p-limit";
 import { getTopChessPlayerWikiData } from "../wikipedia";
+import axios from "axios";
 
 type ScrapedChessPlayer = {
   fideid: number;
@@ -90,11 +91,15 @@ type ScrapedChessPlayer = {
 const chessPlayerScrapeAmount = 250;
 
 export async function syncTopChessPlayers() {
-  const content = await browserbaseFetch(
+  // const content = await browserbaseFetch(
+  //   `https://2700chess.com/next/main-table-men?sort=standard&per-page=${chessPlayerScrapeAmount}`,
+  // );
+
+  // const data: { items: ScrapedChessPlayer[] } = JSON.parse(content);
+
+  const response = await axios.get<{ items: ScrapedChessPlayer[] }>(
     `https://2700chess.com/next/main-table-men?sort=standard&per-page=${chessPlayerScrapeAmount}`,
   );
-
-  const data: { items: ScrapedChessPlayer[] } = JSON.parse(content);
 
   const flagOverrides: Record<string, string> = {
     ff: "ru",
@@ -105,7 +110,7 @@ export async function syncTopChessPlayers() {
     "FIDE (Not a National Fed.)": "Russia",
   };
 
-  const topChessPlayers = data.items.map((c) => ({
+  const topChessPlayers = response.data.items.map((c) => ({
     fideId: c.fideid,
     name: c.name,
     age: c.age,

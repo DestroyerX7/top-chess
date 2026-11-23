@@ -1,10 +1,8 @@
 import Header from "@/components/Header";
 import TopChessPlayerEditForm from "@/components/TopChessPlayerEditForm";
-import { buttonVariants } from "@/components/ui/button";
 import TopChessPlayerWikiSearch from "@/components/TopChessPlayerWikiSearch";
 import { TopChessPlayer } from "@top-chess/db/types";
 import axios from "axios";
-import Link from "next/link";
 
 export default async function TopChessPlayerPage({
   params,
