@@ -54,13 +54,23 @@ npx expo start
 
 Then press `i` for the iOS Simulator, `a` for the Android Emulator, or scan the QR code with Expo Go.
 
+## Building for Development or Preview
+
+```bash
+eas build --platform ios --profile development
+```
+
+```bash
+eas build --platform ios --profile preview
+```
+
 ## Building for Release
 
 This project can be built and submitted with [EAS](https://docs.expo.dev/eas/):
 
 ```bash
-npx eas build --platform ios
-npx eas submit --platform ios
+eas build --platform ios --profile production
+eas submit --platform ios
 ```
 
 ## Related
