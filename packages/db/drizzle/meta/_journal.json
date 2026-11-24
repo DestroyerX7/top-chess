@@ -78,6 +78,13 @@
       "when": 1784191749994,
       "tag": "0010_tough_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791348288285,
+      "tag": "0011_daffy_sinister_six",
+      "breakpoints": true
     }
   ]
 }
