@@ -6,24 +6,23 @@ import { getTopChessPlayerWikiData } from "../wikipedia";
 import axios from "axios";
 import { geonodeFetch } from "./geonode";
 import { browserbaseFetch } from "./browserbase";
-import { ScrapedChessPlayer } from "./types";
+import { MainTable2700chessResponse, ScraperType } from "./types";
 
 const chessPlayerScrapeAmount = 250;
 const url = `https://2700chess.com/next/main-table-men?sort=standard&per-page=${chessPlayerScrapeAmount}`;
 
 export async function scrapeTopChessPlayers(
-  scraperType: "browserbase" | "geonode" | "none" = "geonode",
+  scraperType: ScraperType = "geonode",
 ) {
-  // Add type of the response
-  let data: { items: ScrapedChessPlayer[] } | null = null;
+  let data: MainTable2700chessResponse | null = null;
 
   if (scraperType === "browserbase") {
     const content = await browserbaseFetch(url);
     data = JSON.parse(content);
   } else if (scraperType === "geonode") {
-    data = await geonodeFetch(url);
+    data = await geonodeFetch<MainTable2700chessResponse>(url);
   } else if (scraperType === "none") {
-    const response = await axios.get<{ items: ScrapedChessPlayer[] }>(url);
+    const response = await axios.get<MainTable2700chessResponse>(url);
     data = response.data;
   }
 

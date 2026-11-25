@@ -1,10 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { ScrapedChessPlayer } from "./types";
 
-export async function geonodeFetch(
-  url: string,
-): Promise<{ items: ScrapedChessPlayer[] }> {
+export async function geonodeFetch<T>(url: string): Promise<T> {
   const response = await axios.post<{ data: { html: string } }>(
     "https://scraper.geonode.io/v1/extract",
     {
@@ -13,11 +10,7 @@ export async function geonodeFetch(
       render_js: false, // true = headless browser (slower)
       processing_mode: "sync", // "sync" | "async"
       proxy: {
-        country: "US",
         type: "residential", // "residential" | "datacenter" | "mix"
-      },
-      headers: {
-        "Accept-Language": "en-US",
       },
     },
     {

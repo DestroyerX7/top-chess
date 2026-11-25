@@ -79,3 +79,15 @@ export type ScrapedChessPlayer = {
 
   rating: string; // duplicate of `raiting`
 };
+
+export type ScraperType = "browserbase" | "geonode" | "none";
+
+export type MainTable2700chessResponse = {
+  items: ScrapedChessPlayer[];
+  page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+  has_next_page: boolean;
+  has_previous_page: boolean;
+};
