@@ -16,6 +16,7 @@
     "@upstash/qstash": "^2.11.3",
     "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.6",
     "jose": "^6.2.5",
