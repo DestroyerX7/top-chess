@@ -8,7 +8,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await scrapeWorldChampions();
+  const scraperType = request.headers.get("Scraper-Type") ?? "geonode";
 
-  return NextResponse.json({ ok: true });
+  if (
+    scraperType !== "geonode" &&
+    scraperType !== "browserbase" &&
+    scraperType !== "none"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Invalid scraper type. Must be "geonode" | "browserbase" | "none"',
+      },
+      { status: 400 },
+    );
+  }
+
+  const result = await scrapeWorldChampions(scraperType);
+
+  return NextResponse.json({ ok: true, ...result });
 }

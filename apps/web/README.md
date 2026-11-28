@@ -70,12 +70,6 @@ Create a `.env.local` file in the `apps/web` directory:
 # Database
 NEON_DATABASE_URL=
 
-# Upstash QStash
-QSTASH_URL=
-QSTASH_TOKEN=
-QSTASH_CURRENT_SIGNING_KEY=
-QSTASH_NEXT_SIGNING_KEY=
-
 # Browserbase
 BROWSERBASE_API_KEY=
 
