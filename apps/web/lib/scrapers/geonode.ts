@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as cheerio from "cheerio";
+// import * as cheerio from "cheerio";
 
 export async function geonodeFetch<T>(url: string): Promise<T> {
   const response = await axios.post<{ data: { html: string } }>(
@@ -21,8 +21,14 @@ export async function geonodeFetch<T>(url: string): Promise<T> {
     },
   );
 
-  const $ = cheerio.load(response.data.data.html);
-  const content = $("pre").text();
+  // When I first tried response.data.data.html, was real html
+  // But now it is just the JSON object
+  // Could possibly uninstall cheerio
+  // JSON fields could have html entities in them, might need to fix in the future
+  // const $ = cheerio.load(response.data.data.html);
+  // const content = $("pre").text();
 
-  return JSON.parse(content);
+  // return JSON.parse(content);
+
+  return JSON.parse(response.data.data.html);
 }
